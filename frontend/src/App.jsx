@@ -7,13 +7,26 @@ import {
   BarChart, 
   Zap, 
   Clock,
-  Layers
+  Layers,
+  Loader2,
+  X
 } from 'lucide-react';
+import { useEffect } from 'react';
 import './index.css';
 
 function App() {
   const [triggering, setTriggering] = useState(false);
   const [lastOutput, setLastOutput] = useState(null);
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (lastOutput) {
+      const timer = setTimeout(() => {
+        setLastOutput(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastOutput]);
 
   // Mock function to simulate firing a webhook to n8n
   const triggerWorkflow = async () => {
@@ -89,7 +102,7 @@ function App() {
 
         {/* Stats Grid */}
         <div className="dashboard-stats">
-          <div className="stat-card glass-panel">
+          <div className="stat-card glass-panel staggered-load" style={{ animationDelay: '0.1s' }}>
             <div className="stat-icon">
               <Activity size={24} />
             </div>
@@ -98,7 +111,7 @@ function App() {
               <p>Active Workflows</p>
             </div>
           </div>
-          <div className="stat-card glass-panel">
+          <div className="stat-card glass-panel staggered-load" style={{ animationDelay: '0.2s' }}>
             <div className="stat-icon" style={{ color: 'var(--success)' }}>
               <CheckCircle2 size={24} />
             </div>
@@ -107,7 +120,7 @@ function App() {
               <p>Executions (30d)</p>
             </div>
           </div>
-          <div className="stat-card glass-panel">
+          <div className="stat-card glass-panel staggered-load" style={{ animationDelay: '0.3s' }}>
             <div className="stat-icon" style={{ color: 'var(--accent-orange)' }}>
               <Clock size={24} />
             </div>
@@ -124,37 +137,28 @@ function App() {
           <div className="workflow-list">
             
             {/* Hi Gemini Workflow Card */}
-            <div className="workflow-card glass-panel">
+            <div className="workflow-card glass-panel staggered-load" style={{ animationDelay: '0.4s' }}>
               <div className="workflow-main">
-                <div className="workflow-status status-active"></div>
+                <div className="workflow-status status-active pulse"></div>
                 <div className="workflow-details">
                   <h4>Hi Gemini Test</h4>
                   <p>Webhook</p>
                 </div>
               </div>
               <div className="workflow-actions">
-                {lastOutput && (
-                  <span style={{ 
-                    color: lastOutput.success ? 'var(--success)' : 'var(--error)', 
-                    fontSize: '0.9rem',
-                    marginRight: '1rem' 
-                  }}>
-                    {lastOutput.message}
-                  </span>
-                )}
                 <button 
                   className={`btn-trigger ${triggering ? 'loading' : ''}`}
                   onClick={triggerWorkflow}
                   disabled={triggering}
                 >
-                  <Play size={16} /> 
+                  {triggering ? <Loader2 className="spinner" size={16} /> : <Play size={16} />}
                   {triggering ? 'Running...' : 'Run Now'}
                 </button>
               </div>
             </div>
             
             {/* Template Card 2 */}
-            <div className="workflow-card glass-panel" style={{ opacity: 0.6 }}>
+            <div className="workflow-card glass-panel staggered-load" style={{ opacity: 0.6, animationDelay: '0.5s' }}>
               <div className="workflow-main">
                 <div className="workflow-status status-inactive"></div>
                 <div className="workflow-details">
@@ -172,6 +176,24 @@ function App() {
           </div>
         </section>
       </main>
+
+      {/* Toast Notification */}
+      <div className={`toast-container ${lastOutput ? 'show' : ''}`}>
+        {lastOutput && (
+          <div className="toast glass-panel">
+            <div className={`toast-icon ${lastOutput.success ? 'success' : 'error'}`}>
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="toast-content">
+              <strong>{lastOutput.success ? 'Success!' : 'Error'}</strong>
+              <p>{lastOutput.message}</p>
+            </div>
+            <button className="toast-close" onClick={() => setLastOutput(null)}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
