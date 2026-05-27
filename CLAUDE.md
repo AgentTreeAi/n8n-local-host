@@ -2,43 +2,41 @@
 
 ## n8n MCP (czlonkowski/n8n-mcp)
 
-This project uses the **n8n MCP server** (`czlonkowski/n8n-mcp`) configured globally.
-It connects to the local n8n instance at `http://localhost:5678`.
+MCP server connects to n8n at `https://n8n.workflowsolution.org`.
 
-### When to use the n8n MCP
+**Available MCP tools:** `get_node`, `search_nodes`, `search_templates`, `get_template`, `validate_node`, `validate_workflow`, `tools_documentation`.
 
-Use the n8n MCP tools for ANY task involving:
-- Creating or designing n8n workflows
-- Editing or modifying existing workflows
-- Planning workflow architecture or node connections
-- Searching n8n node documentation or templates
-- Executing or testing workflows
-- Debugging workflow errors or execution history
-
-### How to use
-
-The MCP exposes these key capabilities — use them proactively:
-
-| Task | MCP Action |
-|------|-----------|
-| Look up a node's properties/options | `get_node_info` |
-| Search available nodes | `search_nodes` |
-| Browse workflow templates | `get_workflow_templates` |
-| List existing workflows | `list_workflows` |
-| Create a new workflow | `create_workflow` |
-| Update an existing workflow | `update_workflow` |
-| Execute a workflow | `execute_workflow` |
-| Check execution history | `get_executions` |
+**Write operations** (create/update/delete workflows) are NOT exposed via MCP. Use the n8n REST API directly via curl with the API key from `.mcp.json`.
 
 ### Workflow building rules
 
-1. Always call `get_node_info` before placing a node — do not guess at property names or parameter structures.
-2. Use `get_workflow_templates` to find proven patterns before building from scratch.
-3. When modifying an existing workflow, call `get_workflow` first to read the current state.
-4. Validate node connections match expected input/output types.
-5. After creating/updating a workflow, confirm it appears in `list_workflows`.
+1. Always `get_node` before placing a node — never guess parameter names or typeVersions.
+2. `search_templates` first to find proven patterns before building from scratch.
+3. `validate_workflow` with `profile: "strict"` before deploying anything.
+4. Deploy via: `curl -X POST https://n8n.workflowsolution.org/api/v1/workflows` with `-H "X-N8N-API-KEY: <key>"` and `-H "Content-Type: application/json"`. API key is in `.mcp.json`.
+5. All workflows require a `"settings": {"executionOrder": "v1"}` field.
 
-### n8n API key setup
+## Workflow Templates Library
 
-The API key in `~/.claude/settings.json` under `mcpServers.n8n.env.N8N_API_KEY` must be set to a real key.
-Generate one in n8n: **Settings → API → Create API Key**.
+The project uses an agent skill architecture — not stored template files. See `.agents/skills/workflow-builder/SKILL.md` for the full decision flow.
+
+### Sub-workflows (deployed to n8n)
+
+Wire these into any workflow via Execute Sub-workflow nodes. IDs and input/output contracts in `.agents/skills/workflow-builder/registry.json`.
+
+| Sub-workflow | ID | Purpose |
+|---|---|---|
+| Error Handler | `RdB2EbQZ71hjMUuE` | Auto-severity error reports. Input: `{ error, workflowName, nodeName }` |
+| Notification Hub | `9MwRgAbGAHLTfThi` | Multi-channel routing by severity. Input: `{ message, severity }` |
+| Retry with Backoff | `ouW0VxWj6iDJSIcH` | Exponential backoff HTTP calls. Input: `{ url, method?, maxRetries? }` |
+
+### Validation Pipeline (Quality Gate)
+
+| | |
+|---|---|
+| ID | `8Trx7SSW7AqXmAkv` |
+| Webhook | `POST /webhook/validate-workflow` |
+| What it does | Structure check, security scan, complexity score → PASS/FAIL/REVIEW |
+| Requirement | Must be **activated** in n8n UI before webhook accepts requests |
+
+POST raw workflow JSON to the webhook. Use this before activating any new workflow in production.

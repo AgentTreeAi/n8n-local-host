@@ -1,0 +1,135 @@
+{
+  "name": "Todoist Urgent Task Gmail Notification",
+  "description": "Triggers when a Todoist task is tagged URGENT and sends a Gmail notification",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "todoist-urgent-task",
+        "responseMode": "onReceived",
+        "options": {
+          "allowUnauthorizedRequests": false
+        }
+      },
+      "id": "6bddcb3c-d6d2-442b-8d3e-1a4e7f8c9b2d",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        250,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ JSON.stringify($json.body.event.resource.labels) }}",
+              "rightValue": "URGENT",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ]
+        }
+      },
+      "id": "7a4e2b9f-c8d1-4a5c-9e7b-2f3d4e5f6g7h",
+      "name": "Check if URGENT Tag",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        450,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=🚨 URGENT: {{ $json.body.event.resource.content }}",
+        "message": "=<p><strong>URGENT Task Alert!</strong></p>\n<p><strong>Task:</strong> {{ $json.body.event.resource.content }}</p>\n<p><strong>Project:</strong> {{ $json.body.event.resource.project_id }}</p>\n<p><strong>Description:</strong> Please review and complete this task immediately.</p>\n<p><a href='https://todoist.com/app/task/{{ $json.body.event.resource.id }}'>Open in Todoist</a></p>",
+        "emailType": "html",
+        "authentication": "oAuth2"
+      },
+      "id": "8b5f3c0a-d9e2-4b6d-af8c-3g4h5i6j7k8l",
+      "name": "Send Gmail Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "Workflow Error: Todoist Urgent Task Notification",
+        "message": "=<p><strong>Error occurred in workflow:</strong> Todoist Urgent Task Gmail Notification</p>\n<p><strong>Error Details:</strong></p>\n<p>{{ $json.error_message || 'Unknown error' }}</p>\n<p><strong>Node:</strong> {{ $json.node_name || 'Unknown' }}</p>\n<p>Please check n8n logs for more details.</p>",
+        "emailType": "html",
+        "authentication": "oAuth2"
+      },
+      "id": "9c6g4d1b-eaf3-5c7e-bg9d-4h5i6j7k8l9m",
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        650,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check if URGENT Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if URGENT Tag": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorHandler": {
+      "enabled": true,
+      "node": "Send Error Notification"
+    }
+  }
+}
