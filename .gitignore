@@ -1,0 +1,12 @@
+.env
+n8n-data/
+backups/
+*.log
+.agents/
+.claude/
+.gemini/
+mcp_config.json
+*.ico
+*.png
+query
+node_modules/
