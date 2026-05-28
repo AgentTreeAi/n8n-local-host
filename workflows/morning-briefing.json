@@ -1,0 +1,141 @@
+{
+  "name": "Todoist Morning Briefing",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 7 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "task",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filter": "(today | overdue) & !##Housework"
+        }
+      },
+      "id": "todoist-get-tasks",
+      "name": "Get Tasks",
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 2.2,
+      "position": [220, 0],
+      "credentials": {
+        "todoistApi": {
+          "id": "9phgu8r8c5dNtDZC",
+          "name": "Todoist API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const now = new Date();\nconst tasks = $input.all().map(item => item.json);\n\nif (tasks.length === 0) {\n  return [{ json: { hasTasks: false } }];\n}\n\nconst overdue = [];\nconst today = [];\nconst deadlines = [];\nlet p1Count = 0;\n\nfor (const task of tasks) {\n  if (task.priority === 4) p1Count++;\n\n  const dueDate = task.due ? new Date(task.due.date) : null;\n  const isOverdue = dueDate && dueDate < new Date(now.toDateString());\n\n  const priorityMap = { 4: 'P1', 3: 'P2', 2: 'P3', 1: 'P4' };\n  const pLabel = priorityMap[task.priority] || 'P4';\n\n  const entry = {\n    content: task.content,\n    priority: pLabel,\n    priorityNum: task.priority,\n    dueDate: task.due ? task.due.date : null,\n    dueString: task.due ? task.due.string : '',\n    isRecurring: task.due ? task.due.is_recurring : false,\n    projectId: task.project_id,\n    labels: task.labels || [],\n    deadlineDate: task.deadline ? task.deadline.date : null\n  };\n\n  if (isOverdue) {\n    const diffMs = now - dueDate;\n    entry.daysOverdue = Math.floor(diffMs / (1000 * 60 * 60 * 24));\n    overdue.push(entry);\n  } else {\n    today.push(entry);\n  }\n\n  if (task.deadline && task.deadline.date) {\n    const dl = new Date(task.deadline.date);\n    const daysLeft = Math.ceil((dl - now) / (1000 * 60 * 60 * 24));\n    if (daysLeft <= 7) {\n      deadlines.push({ content: task.content, deadlineDate: task.deadline.date, daysLeft: daysLeft });\n    }\n  }\n}\n\noverdue.sort((a, b) => b.priorityNum - a.priorityNum || b.daysOverdue - a.daysOverdue);\ntoday.sort((a, b) => b.priorityNum - a.priorityNum);\ndeadlines.sort((a, b) => a.daysLeft - b.daysLeft);\n\nconst months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst dateStr = months[now.getMonth()] + ' ' + now.getDate();\n\nlet html = '<div style=\"font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a;\">';\nhtml += '<div style=\"background:#1a1a1a;color:white;padding:20px;border-radius:8px 8px 0 0;\">';\nhtml += '<h1 style=\"margin:0;font-size:20px;\">Daily Briefing \\u2014 ' + dateStr + '</h1>';\nhtml += '<p style=\"margin:5px 0 0;opacity:0.8;font-size:14px;\">' + overdue.length + ' overdue \\u00b7 ' + today.length + ' today</p>';\nhtml += '</div>';\nhtml += '<div style=\"padding:20px;background:#f9f9f9;border-radius:0 0 8px 8px;\">';\n\nif (overdue.length > 0) {\n  html += '<h2 style=\"color:#dc3545;font-size:16px;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;\">\\u26a0 Overdue</h2>';\n  html += '<table style=\"width:100%;border-collapse:collapse;margin-bottom:20px;\">';\n  for (const t of overdue) {\n    const pColor = t.priority === 'P1' ? '#dc3545' : t.priority === 'P2' ? '#fd7e14' : '#6c757d';\n    let deadlineNote = '';\n    if (t.deadlineDate) {\n      const dl = new Date(t.deadlineDate);\n      const daysLeft = Math.ceil((dl - now) / (1000 * 60 * 60 * 24));\n      deadlineNote = ' <span style=\"background:#dc3545;color:white;padding:2px 6px;border-radius:3px;font-size:11px;\">DEADLINE: ' + t.deadlineDate + ' (' + daysLeft + 'd left)</span>';\n    }\n    html += '<tr style=\"border-bottom:1px solid #e9ecef;\">';\n    html += '<td style=\"padding:8px 4px;width:40px;\"><span style=\"background:' + pColor + ';color:white;padding:2px 6px;border-radius:3px;font-size:12px;font-weight:bold;\">' + t.priority + '</span></td>';\n    html += '<td style=\"padding:8px 4px;\">' + t.content + deadlineNote + '</td>';\n    html += '<td style=\"padding:8px 4px;text-align:right;color:#6c757d;font-size:13px;\">' + t.daysOverdue + 'd overdue</td>';\n    html += '</tr>';\n  }\n  html += '</table>';\n}\n\nif (today.length > 0) {\n  html += '<h2 style=\"color:#28a745;font-size:16px;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;\">\\u2713 Today</h2>';\n  html += '<table style=\"width:100%;border-collapse:collapse;margin-bottom:20px;\">';\n  for (const t of today) {\n    const pColor = t.priority === 'P1' ? '#dc3545' : t.priority === 'P2' ? '#fd7e14' : t.priority === 'P3' ? '#ffc107' : '#6c757d';\n    html += '<tr style=\"border-bottom:1px solid #e9ecef;\">';\n    html += '<td style=\"padding:8px 4px;width:40px;\"><span style=\"background:' + pColor + ';color:white;padding:2px 6px;border-radius:3px;font-size:12px;font-weight:bold;\">' + t.priority + '</span></td>';\n    html += '<td style=\"padding:8px 4px;\">' + t.content + '</td>';\n    html += '<td style=\"padding:8px 4px;text-align:right;color:#6c757d;font-size:13px;\">' + (t.dueString || '') + '</td>';\n    html += '</tr>';\n  }\n  html += '</table>';\n}\n\nif (deadlines.length > 0) {\n  html += '<h2 style=\"color:#6f42c1;font-size:16px;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;\">\\ud83c\\udfaf Upcoming Deadlines (7 days)</h2>';\n  for (const d of deadlines) {\n    const urgency = d.daysLeft <= 1 ? '#dc3545' : d.daysLeft <= 3 ? '#fd7e14' : '#6f42c1';\n    html += '<p style=\"margin:4px 0;padding:8px;background:white;border-left:4px solid ' + urgency + ';border-radius:4px;\"><strong>' + d.deadlineDate + '</strong> \\u2014 ' + d.content + ' <span style=\"color:' + urgency + ';font-weight:bold;\">(' + d.daysLeft + 'd left)</span></p>';\n  }\n  html += '<br/>';\n}\n\nconst p1Warning = p1Count > 5 ? '<span style=\"color:#dc3545;\">\\u26a0 OVERLOADED \\u2014 consider downgrading ' + (p1Count - 5) + '+ tasks</span>' : '<span style=\"color:#28a745;\">\\u2713 Healthy</span>';\nhtml += '<div style=\"background:white;padding:12px;border-radius:6px;margin-top:8px;\">';\nhtml += '<strong>P1 Health:</strong> ' + p1Count + ' active \\u2014 ' + p1Warning;\nhtml += '</div></div></div>';\n\nconst subject = '[Daily Briefing] ' + dateStr + ' \\u2014 ' + overdue.length + ' overdue, ' + today.length + ' today';\n\nreturn [{ json: { hasTasks: true, subject: subject, html: html, overdueCount: overdue.length, todayCount: today.length, p1Count: p1Count } }];"
+      },
+      "id": "code-format",
+      "name": "Format Briefing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "check-has-tasks",
+              "leftValue": "={{ $json.hasTasks }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-has-tasks",
+      "name": "Has Tasks?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [660, 0],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "emailType": "html",
+        "options": {}
+      },
+      "id": "gmail-send",
+      "name": "Send Briefing",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [880, -60],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop",
+      "name": "No Tasks",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [880, 120]
+    }
+  ],
+  "connections": {
+    "Daily 7 AM": {
+      "main": [
+        [{ "node": "Get Tasks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Tasks": {
+      "main": [
+        [{ "node": "Format Briefing", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Briefing": {
+      "main": [
+        [{ "node": "Has Tasks?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Tasks?": {
+      "main": [
+        [{ "node": "Send Briefing", "type": "main", "index": 0 }],
+        [{ "node": "No Tasks", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

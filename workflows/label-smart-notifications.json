@@ -1,0 +1,245 @@
+{
+  "name": "Todoist Label-Smart Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "todoist-label-router",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [250, 300],
+      "webhookId": "label-smart-webhook-001"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Parse Todoist webhook payload\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body || item.json;\n  const eventData = body.event_data || body;\n  \n  const content = eventData.content || '';\n  const labels = eventData.labels || [];\n  const projectId = eventData.project_id || '';\n  const taskId = eventData.id || '';\n  \n  // Convert labels to a single string for easy matching\n  const labelsStr = Array.isArray(labels) ? labels.join(', ') : String(labels);\n  \n  // Determine route based on label\n  let route = 'none';\n  if (labelsStr.includes('URGENT')) {\n    route = 'urgent';\n  } else if (labelsStr.includes('Birthday') || labelsStr.includes('Anniversary')) {\n    route = 'birthday';\n  } else if (labelsStr.includes('Financial')) {\n    route = 'financial';\n  }\n  \n  results.push({\n    json: {\n      route,\n      content,\n      labels: labelsStr,\n      taskId,\n      projectId\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Parse Payload & Determine Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "URGENT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "birthday",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Birthday"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "financial",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Financial"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Default"
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Route by Label",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=🚨 URGENT: {{ $json.content }}",
+        "emailType": "html",
+        "message": "=<h2 style=\"color:#cc0000;\">🚨 URGENT Task Alert</h2><hr><p><strong>Task:</strong> {{ $json.content }}</p><p><strong>Labels:</strong> {{ $json.labels }}</p><p><strong>Project ID:</strong> {{ $json.projectId }}</p><p style=\"margin-top:16px;\"><a href=\"https://todoist.com/app/task/{{ $json.taskId }}\" style=\"background:#cc0000;color:#fff;padding:8px 16px;text-decoration:none;border-radius:4px;\">Open in Todoist</a></p>"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Gmail URGENT",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [960, 120],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=🎊 Reminder: {{ $json.content }}",
+        "emailType": "html",
+        "message": "=<h2 style=\"color:#8B5CF6;\">🎊 Birthday / Anniversary Reminder</h2><hr><p><strong>Task:</strong> {{ $json.content }}</p><p><strong>Labels:</strong> {{ $json.labels }}</p><p><strong>Project ID:</strong> {{ $json.projectId }}</p><p style=\"margin-top:16px;\"><a href=\"https://todoist.com/app/task/{{ $json.taskId }}\" style=\"background:#8B5CF6;color:#fff;padding:8px 16px;text-decoration:none;border-radius:4px;\">Open in Todoist</a></p>"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000005",
+      "name": "Gmail Birthday",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [960, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=💰 Financial Task: {{ $json.content }}",
+        "emailType": "html",
+        "message": "=<h2 style=\"color:#059669;\">💰 Financial Task Alert</h2><hr><p><strong>Task:</strong> {{ $json.content }}</p><p><strong>Labels:</strong> {{ $json.labels }}</p><p><strong>Project ID:</strong> {{ $json.projectId }}</p><p style=\"margin-top:16px;\"><a href=\"https://todoist.com/app/task/{{ $json.taskId }}\" style=\"background:#059669;color:#fff;padding:8px 16px;text-decoration:none;border-radius:4px;\">Open in Todoist</a></p>"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000006",
+      "name": "Gmail Financial",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [960, 480],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0001-4000-8000-000000000007",
+      "name": "No Action",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 660]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Payload & Determine Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Payload & Determine Route": {
+      "main": [
+        [
+          {
+            "node": "Route by Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Label": {
+      "main": [
+        [
+          {
+            "node": "Gmail URGENT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail Birthday",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail Financial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null
+}

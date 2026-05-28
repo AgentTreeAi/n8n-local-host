@@ -13,8 +13,14 @@ MCP server connects to n8n at `https://n8n.workflowsolution.org`.
 1. Always `get_node` before placing a node — never guess parameter names or typeVersions.
 2. `search_templates` first to find proven patterns before building from scratch.
 3. `validate_workflow` with `profile: "strict"` before deploying anything.
-4. Deploy via: `curl -X POST https://n8n.workflowsolution.org/api/v1/workflows` with `-H "X-N8N-API-KEY: <key>"` and `-H "Content-Type: application/json"`. API key is in `.mcp.json`.
+4. **Deploy (create-or-update) protocol — NEVER blindly POST:**
+   - First, `GET /api/v1/workflows` and check if a workflow with the same name already exists.
+   - If it **does not exist**: `POST /api/v1/workflows` to create it. Capture the returned `id` immediately.
+   - If it **already exists**: `PUT /api/v1/workflows/{id}` to update in place. Never create a duplicate.
+   - For all subsequent changes in the same session, always use `PUT` with the captured `id`.
+   - Use `-H "X-N8N-API-KEY: <key>"` and `-H "Content-Type: application/json"`. API key is in `.mcp.json`.
 5. All workflows require a `"settings": {"executionOrder": "v1"}` field.
+6. **One workflow per intent.** Never create multiple workflows for the same purpose. If a deploy fails, fix and retry the update — do not create a new workflow.
 
 ## Workflow Templates Library
 

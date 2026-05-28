@@ -1,0 +1,263 @@
+{
+  "name": "Todoist Overdue Escalator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 21,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Day 9 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filter": "overdue & !recurring"
+        }
+      },
+      "id": "todoist-get-overdue",
+      "name": "Get Overdue Tasks",
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 2.2,
+      "position": [220, 0],
+      "credentials": {
+        "todoistApi": {
+          "id": "9phgu8r8c5dNtDZC",
+          "name": "Todoist API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const now = new Date();\nnow.setHours(0, 0, 0, 0);\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const task = item.json;\n  const dueDate = new Date(task.due?.date || task.due?.datetime);\n  dueDate.setHours(0, 0, 0, 0);\n\n  const diffMs = now.getTime() - dueDate.getTime();\n  const daysOverdue = Math.floor(diffMs / (1000 * 60 * 60 * 24));\n\n  let tier;\n  if (daysOverdue >= 14) {\n    tier = 'stale';\n  } else if (daysOverdue >= 7) {\n    tier = 'week_overdue';\n  } else if (daysOverdue >= 3) {\n    tier = 'urgent';\n  } else {\n    tier = 'skip';\n  }\n\n  results.push({\n    json: {\n      content: task.content,\n      daysOverdue: daysOverdue,\n      tier: tier,\n      taskId: task.id,\n      labels: task.labels || [],\n      priority: task.priority,\n      dueDate: task.due?.date || task.due?.datetime\n    }\n  });\n}\n\nreturn results.filter(r => r.json.tier !== 'skip');"
+      },
+      "id": "code-calc-tier",
+      "name": "Calculate Overdue Tier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Urgent (3-6 days)"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "week_overdue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Week Overdue (7-13 days)"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "stale",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Stale (14+ days)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-tier",
+      "name": "Route by Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.todoist.com/rest/v2/tasks/{{ $json.taskId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "todoistApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: [...new Set([...$json.labels, \"\\ud83d\\udea8 URGENT \\ud83d\\udea8\"])] }) }}"
+      },
+      "id": "http-add-urgent-label",
+      "name": "Add URGENT Label",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, -200],
+      "credentials": {
+        "todoistApi": {
+          "id": "9phgu8r8c5dNtDZC",
+          "name": "Todoist API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=⚠️ Task Overdue 1 Week: {{ $json.content }}",
+        "emailType": "html",
+        "message": "=<h2>Task Overdue for {{ $json.daysOverdue }} Days</h2><p><strong>Task:</strong> {{ $json.content }}</p><p><strong>Due date:</strong> {{ $json.dueDate }}</p><p><strong>Days overdue:</strong> {{ $json.daysOverdue }}</p><p>This task has been overdue for over a week. Please review and take action.</p>"
+      },
+      "id": "gmail-week-overdue",
+      "name": "Email Week Overdue",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [900, 0],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "agenttree.ai@gmail.com",
+        "subject": "=🚨 STALE TASK ALERT: {{ $json.content }}",
+        "emailType": "html",
+        "message": "=<h2 style=\"color: red;\">Stale Task Alert — {{ $json.daysOverdue }} Days Overdue</h2><p><strong>Task:</strong> {{ $json.content }}</p><p><strong>Due date:</strong> {{ $json.dueDate }}</p><p><strong>Days overdue:</strong> {{ $json.daysOverdue }}</p><p>This task has been overdue for <strong>{{ $json.daysOverdue }} days</strong>. It needs immediate attention — consider completing, rescheduling, or removing it.</p>"
+      },
+      "id": "gmail-stale-alert",
+      "name": "Email Stale Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [900, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Day 9 PM": {
+      "main": [
+        [
+          {
+            "node": "Get Overdue Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Calculate Overdue Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Overdue Tier": {
+      "main": [
+        [
+          {
+            "node": "Route by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Tier": {
+      "main": [
+        [
+          {
+            "node": "Add URGENT Label",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Week Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Stale Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

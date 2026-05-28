@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://n8n.workflowsolution.org/api/:path*"
+    },
+    {
+      "source": "/webhook/:path*",
+      "destination": "https://n8n.workflowsolution.org/webhook/:path*"
+    },
+    {
+      "source": "/webhook-test/:path*",
+      "destination": "https://n8n.workflowsolution.org/webhook-test/:path*"
+    }
+  ]
+}
