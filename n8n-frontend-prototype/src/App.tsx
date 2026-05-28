@@ -141,7 +141,7 @@ function App() {
           <h1 className="font-bold text-lg tracking-widest uppercase text-text-primary">N8N<span className="text-brand">.TERMINAL</span></h1>
         </div>
         
-        <nav className="flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-2">
           {[
             { key: 'monitor', label: 'Monitor' },
             { key: 'workflows', label: 'Workflows' },
@@ -223,7 +223,7 @@ function App() {
         </aside>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative pb-24 md:pb-0">
           
           <div className="mx-auto w-full p-4 md:p-6">
             {activeTab === 'monitor' && (
@@ -364,6 +364,32 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* iOS Style Bottom Sticky Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-black/85 border-t border-border backdrop-blur-xl flex justify-around items-center pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)] px-3 shadow-[0_-4px_24px_rgba(0,0,0,0.8)]">
+        {[
+          { key: 'monitor', label: 'Monitor', icon: Activity },
+          { key: 'workflows', label: 'Workflows', icon: Database },
+          { key: 'system', label: 'System', icon: Shield },
+        ].map((t) => {
+          const active = activeTab === t.key;
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`flex flex-col items-center gap-1 py-1 px-5 transition-all duration-300 rounded-lg ${
+                active 
+                  ? 'text-brand scale-105 bg-brand/10 border border-brand/20 shadow-brand' 
+                  : 'text-text-secondary active:text-text-primary'
+              }`}
+            >
+              <Icon size={20} className={active ? 'text-brand shadow-brand animate-pulse' : ''} />
+              <span className="text-[10px] font-mono uppercase tracking-widest">{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

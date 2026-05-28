@@ -300,10 +300,31 @@ export default function App() {
           })}
         </aside>
 
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative pb-24 md:pb-0">
           <div className="mx-auto w-full max-w-[1500px]">{tabContent}</div>
         </div>
       </main>
+
+      {/* iOS Style Bottom Sticky Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 border-t border-white/5 backdrop-blur-xl flex justify-around items-center pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)] px-3 shadow-[0_-4px_24px_rgba(0,0,0,0.6)]">
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all duration-300 rounded-lg ${
+                active 
+                  ? 'text-brand scale-105 bg-brand/10' 
+                  : 'text-zinc-500 active:text-zinc-300'
+              }`}
+            >
+              <t.icon size={20} className={active ? 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : ''} />
+              <span className="text-[10px] font-medium tracking-tight">{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       <CommandPalette
         open={paletteOpen}

@@ -10,6 +10,16 @@
     background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 24px 24px;
     background-attachment: fixed;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Disable selection on interactive buttons for a native app feel */
+  button, a, nav, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 
