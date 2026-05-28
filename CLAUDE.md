@@ -46,3 +46,20 @@ Wire these into any workflow via Execute Sub-workflow nodes. IDs and input/outpu
 | Requirement | Must be **activated** in n8n UI before webhook accepts requests |
 
 POST raw workflow JSON to the webhook. Use this before activating any new workflow in production.
+
+## OpenRouter Model Selection
+
+Any workflow using OpenRouter (AI Agent + `lmChatOpenRouter` sub-node OR raw HTTP) **must** pick a model from `.agents/skills/openrouter-model-selector/registry.json`. Never invent a slug; never call OpenRouter without provider routing.
+
+See `.agents/skills/openrouter-model-selector/SKILL.md` for the decision flow. Quick defaults:
+
+| Need | Slug |
+|---|---|
+| Complex agent | `anthropic/claude-opus-4.7:exacto` |
+| Standard agent | `anthropic/claude-sonnet-4.6:exacto` |
+| Fast/cheap, vision | `google/gemini-3.5-flash:exacto` |
+| Open-weight | `deepseek/deepseek-v4-pro:exacto` |
+| Code | `openai/gpt-5.3-codex:exacto` |
+| Long context (2M) | `x-ai/grok-4.20` |
+
+**Hard rules:** never use `x-ai/grok-4.20-multi-agent` in an AI Agent (no tool support); DeepSeek slugs without `:exacto` route to fp4-quantized hosts.
