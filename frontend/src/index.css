@@ -7,6 +7,9 @@
 @layer base {
   body {
     @apply bg-background text-text-primary antialiased font-sans tracking-tight;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
   }
 }
 

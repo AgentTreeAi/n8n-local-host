@@ -1,49 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Activity, Play, Settings, Cpu, HardDrive, Database, ListFilter, BarChart3, TerminalSquare } from 'lucide-react';
+import { useState } from 'react';
+import { Activity, Play, Settings, Cpu, HardDrive, Database, ListFilter, BarChart3, TerminalSquare, Shield, RefreshCw } from 'lucide-react';
 import ExecutionMonitor from './components/ExecutionMonitor';
 import Workflows from './components/Workflows';
+import SystemHealth from './components/SystemHealth';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Relative human-readable time formatter (e.g. "Just now", "2m ago")
-function formatRelativeTime(dateStr: string | undefined): string {
-  if (!dateStr) return 'N/A';
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  if (isNaN(diffMs)) return 'N/A';
-  const diffSecs = Math.floor(diffMs / 1000);
-  if (diffSecs < 10) return 'Just now';
-  if (diffSecs < 60) return `${diffSecs}s ago`;
-  const diffMins = Math.floor(diffSecs / 60);
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
-}
-
-// Duration calculator (e.g. "965ms", "1.2s")
-function formatDuration(startedAt: string | undefined, stoppedAt: string | undefined): string {
-  if (!startedAt) return '0ms';
-  const start = new Date(startedAt).getTime();
-  const stop = stoppedAt ? new Date(stoppedAt).getTime() : new Date().getTime();
-  const diffMs = stop - start;
-  if (isNaN(diffMs) || diffMs < 0) return '0ms';
-  if (diffMs < 1000) return `${diffMs}ms`;
-  return `${(diffMs / 1000).toFixed(1)}s`;
-}
+import { useN8nData } from './hooks/useN8nData';
+import { formatMs } from './lib/formatters';
 
 // Dynamically bin executions into 6 intervals across the last 24 hours
-function generateChartData(executionsList: any[] | null): { time: string; executions: number }[] {
-  const defaultBins = [
-    { time: '00:00', executions: 0 },
-    { time: '04:00', executions: 0 },
-    { time: '08:00', executions: 0 },
-    { time: '12:00', executions: 0 },
-    { time: '16:00', executions: 0 },
-    { time: '20:00', executions: 0 },
-    { time: '24:00', executions: 0 },
-  ];
+function generateChartData(executionsList: any[] | null): { time: string; executions: number; success: number; failed: number }[] {
+  const defaultBins = Array.from({ length: 7 }, (_, i) => ({
+    time: `${String(i * 4).padStart(2, '0')}:00`,
+    executions: 0,
+    success: 0,
+    failed: 0,
+  }));
   if (!executionsList || executionsList.length === 0) {
     return defaultBins;
   }
@@ -53,7 +24,9 @@ function generateChartData(executionsList: any[] | null): { time: string; execut
     return {
       time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
       timestamp: d.getTime(),
-      executions: 0
+      executions: 0,
+      success: 0,
+      failed: 0,
     };
   });
 
@@ -64,15 +37,19 @@ function generateChartData(executionsList: any[] | null): { time: string; execut
     for (let i = 0; i < bins.length - 1; i++) {
       if (exeTime >= bins[i].timestamp && exeTime < bins[i+1].timestamp) {
         bins[i].executions++;
+        if (exe.status === 'success') bins[i].success++;
+        if (exe.status === 'failed') bins[i].failed++;
         break;
       }
     }
     if (exeTime >= bins[bins.length - 1].timestamp) {
       bins[bins.length - 1].executions++;
+      if (exe.status === 'success') bins[bins.length - 1].success++;
+      if (exe.status === 'failed') bins[bins.length - 1].failed++;
     }
   });
 
-  return bins.map(b => ({ time: b.time, executions: b.executions }));
+  return bins.map(b => ({ time: b.time, executions: b.executions, success: b.success, failed: b.failed }));
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -80,10 +57,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-background border border-brand p-3 shadow-brand">
         <p className="text-text-secondary text-xs font-mono mb-1">{label}</p>
-        <p className="text-brand font-mono font-bold flex items-center gap-2">
-          <Activity size={14} />
-          {payload[0].value} EXECUTIONS
+        <p className="text-brand font-mono font-bold flex items-center gap-2 text-xs">
+          <Activity size={12} />
+          {payload[0]?.value || 0} TOTAL
         </p>
+        {payload[1] && (
+          <p className="text-success font-mono text-xs flex items-center gap-2 mt-0.5">
+            ✓ {payload[1].value} OK
+          </p>
+        )}
+        {payload[2] && payload[2].value > 0 && (
+          <p className="text-warning font-mono text-xs flex items-center gap-2 mt-0.5">
+            ✗ {payload[2].value} FAILED
+          </p>
+        )}
       </div>
     );
   }
@@ -92,90 +79,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 function App() {
   const [activeTab, setActiveTab] = useState('monitor');
-
-  // Real dynamic states
-  const [workflows, setWorkflows] = useState<any[] | null>(null);
-  const [executions, setExecutions] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState<'CONNECTING' | 'CONNECTED' | 'OFFLINE'>('CONNECTING');
-
-  useEffect(() => {
-    let active = true;
-
-    async function fetchData() {
-      try {
-        setConnectionStatus('CONNECTING');
-        const apiKey = import.meta.env.VITE_N8N_API_KEY || '';
-        const headers: HeadersInit = {
-          'Accept': 'application/json'
-        };
-        if (apiKey) {
-          headers['X-N8N-API-KEY'] = apiKey;
-        }
-
-        // Fetch workflows
-        const wfRes = await fetch('/api/v1/workflows', { headers });
-        if (!wfRes.ok) throw new Error(`Workflows fetch failed: ${wfRes.status}`);
-        const wfJson = await wfRes.json();
-        const wfData = wfJson.data || [];
-
-        // Fetch executions
-        const exeRes = await fetch('/api/v1/executions', { headers });
-        if (!exeRes.ok) throw new Error(`Executions fetch failed: ${exeRes.status}`);
-        const exeJson = await exeRes.json();
-        const exeData = exeJson.data || [];
-
-        if (active) {
-          // Map workflows
-          const mappedWorkflows = wfData.map((wf: any) => ({
-            id: wf.id,
-            name: wf.name,
-            status: wf.active ? 'active' : 'inactive',
-            created: formatRelativeTime(wf.createdAt),
-            updated: formatRelativeTime(wf.updatedAt),
-            nodesCount: Array.isArray(wf.nodes) ? wf.nodes.length : 0
-          }));
-
-          // Map executions
-          const mappedExecutions = exeData.map((exe: any) => {
-            const matchedWf = mappedWorkflows.find((w: any) => w.id === exe.workflowId);
-            return {
-              id: `EXE-${exe.id}`,
-              workflow: matchedWf ? matchedWf.name : 'Unknown Process',
-              status: exe.status === 'success' ? 'success' : (exe.status === 'failed' ? 'failed' : 'running'),
-              duration: formatDuration(exe.startedAt, exe.stoppedAt),
-              timestamp: formatRelativeTime(exe.startedAt),
-              rawStartedAt: exe.startedAt,
-              nodes: matchedWf ? matchedWf.nodesCount : 0
-            };
-          });
-
-          setWorkflows(mappedWorkflows);
-          setExecutions(mappedExecutions);
-          setConnectionStatus('CONNECTED');
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        if (active) {
-          setWorkflows(null);
-          setExecutions(null);
-          setConnectionStatus('OFFLINE');
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchData();
-    
-    // Set up polling interval every 15 seconds to keep the monitor updated
-    const interval = setInterval(fetchData, 15000);
-
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, []);
+  const { 
+    workflows, executions, credentials, 
+    loading, connectionStatus, instanceHealthy, lastRefreshedAt,
+    refresh, toggleWorkflow, retryExecution 
+  } = useN8nData();
 
   // Stats calculations
   const totalExecs = executions ? executions.length : 0;
@@ -188,7 +96,7 @@ function App() {
     successRate = `${((successCount / totalExecs) * 100).toFixed(1)}%`;
   }
 
-  // Errors in last 24h
+  // Errors
   let errors24h = '00';
   if (executions) {
     const failedCount = executions.filter((e: any) => e.status === 'failed').length;
@@ -200,24 +108,13 @@ function App() {
   if (executions && executions.length > 0) {
     const successfulExecs = executions.filter((e: any) => e.status === 'success');
     if (successfulExecs.length > 0) {
-      let totalMs = 0;
-      let counted = 0;
-      successfulExecs.forEach((e: any) => {
-        const durStr = e.duration;
-        let ms = 0;
-        if (durStr.endsWith('ms')) {
-          ms = parseInt(durStr.slice(0, -2)) || 0;
-        } else if (durStr.endsWith('s')) {
-          ms = parseFloat(durStr.slice(0, -1)) * 1000 || 0;
-        }
-        if (!isNaN(ms)) {
-          totalMs += ms;
-          counted++;
-        }
-      });
-      avgCompTime = counted > 0 ? `${Math.round(totalMs / counted)}ms` : '---';
+      const totalMs = successfulExecs.reduce((sum: number, e: any) => sum + e.durationMs, 0);
+      avgCompTime = formatMs(totalMs / successfulExecs.length);
     }
   }
+
+  // Active workflows count
+  const activeWfCount = workflows ? workflows.filter(w => w.status === 'active').length : 0;
 
   const dynamicChartData = generateChartData(executions);
 
@@ -245,51 +142,55 @@ function App() {
         </div>
         
         <nav className="flex items-center gap-2">
-          <button 
-            onClick={() => setActiveTab('monitor')}
-            className={`px-6 py-1.5 text-xs font-mono uppercase tracking-widest transition-colors ${activeTab === 'monitor' ? 'bg-brand text-black shadow-brand' : 'bg-card border border-border text-text-secondary hover:text-brand hover:border-brand'}`}
-          >
-            Monitor
-          </button>
-          <button 
-            onClick={() => setActiveTab('workflows')}
-            className={`px-6 py-1.5 text-xs font-mono uppercase tracking-widest transition-colors ${activeTab === 'workflows' ? 'bg-brand text-black shadow-brand' : 'bg-card border border-border text-text-secondary hover:text-brand hover:border-brand'}`}
-          >
-            Workflows
-          </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`px-6 py-1.5 text-xs font-mono uppercase tracking-widest transition-colors ${activeTab === 'settings' ? 'bg-brand text-black shadow-brand' : 'bg-card border border-border text-text-secondary hover:text-brand hover:border-brand'}`}
-          >
-            Settings
-          </button>
+          {[
+            { key: 'monitor', label: 'Monitor' },
+            { key: 'workflows', label: 'Workflows' },
+            { key: 'system', label: 'System' },
+          ].map(tab => (
+            <button 
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-6 py-1.5 text-xs font-mono uppercase tracking-widest transition-colors ${activeTab === tab.key ? 'bg-brand text-black shadow-brand' : 'bg-card border border-border text-text-secondary hover:text-brand hover:border-brand'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </nav>
 
         <div className="flex items-center gap-4 text-xs font-mono hidden md:flex uppercase tracking-wider">
+          {/* Active workflow count */}
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Database size={12} className="text-brand" />
+            {activeWfCount} WF_ACTIVE
+          </div>
+
           {connectionStatus === 'CONNECTED' && (
             <div className="flex items-center gap-2 text-brand">
               <span className="w-2 h-2 bg-brand shadow-brand animate-pulse"></span>
-              SYS_OPS_CONNECTED
+              CONNECTED
             </div>
           )}
           {connectionStatus === 'CONNECTING' && (
             <div className="flex items-center gap-2 text-brand/60 animate-pulse">
               <span className="w-2 h-2 bg-brand/50"></span>
-              SYS_CONN_CONNECTING
+              CONNECTING
             </div>
           )}
           {connectionStatus === 'OFFLINE' && (
             <div className="flex items-center gap-2 text-warning animate-pulse">
               <span className="w-2 h-2 bg-warning shadow-[0_0_10px_rgba(255,0,60,0.5)]"></span>
-              SYS_CONN_OFFLINE
+              OFFLINE
             </div>
           )}
+          <button onClick={refresh} className="p-1 text-text-muted hover:text-brand transition-colors" title="Refresh data">
+            <RefreshCw size={14} />
+          </button>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden bg-background">
-        {/* Minimal Side Rail - Vertical System Resource Strip */}
+        {/* Minimal Side Rail */}
         <aside className="w-14 border-r border-border bg-card flex flex-col items-center py-4 gap-4 z-10 relative hidden sm:flex">
           <button className="p-2 text-text-secondary hover:text-brand transition-colors hover:bg-brand/10 group relative border border-transparent hover:border-brand">
             <Play size={20} />
@@ -307,10 +208,16 @@ function App() {
           >
             <Database size={20} />
           </button>
+          <button 
+            onClick={() => setActiveTab('system')}
+            className={`p-2 transition-colors group relative border ${activeTab === 'system' ? 'text-brand border-brand bg-brand/10' : 'text-text-secondary border-transparent hover:text-brand hover:border-brand'}`}
+          >
+            <Shield size={20} />
+          </button>
           <div className="mt-auto w-full flex flex-col items-center gap-4">
             <div className="w-full h-px bg-border"></div>
-            <button className="p-2 text-text-secondary hover:text-brand transition-colors hover:bg-brand/10 border border-transparent hover:border-brand">
-              <Settings size={20} />
+            <button onClick={refresh} className="p-2 text-text-secondary hover:text-brand transition-colors hover:bg-brand/10 border border-transparent hover:border-brand">
+              <RefreshCw size={20} />
             </button>
           </div>
         </aside>
@@ -322,53 +229,51 @@ function App() {
             {activeTab === 'monitor' && (
               <div className="animate-in fade-in duration-300 space-y-6">
                 
-                {/* Telemetry Ribbon (LED Segment Display style) */}
+                {/* Telemetry Ribbon */}
                 <div className="flex overflow-x-auto gap-4">
-                  <div className="flex-1 min-w-[200px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
+                  <div className="flex-1 min-w-[180px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
                     <div className="text-[10px] text-text-secondary font-mono mb-2 uppercase tracking-widest flex items-center gap-2 group-hover:text-brand transition-colors"><Activity size={12}/> VOL_TOTAL</div>
                     <div className="flex items-baseline gap-3">
                       <span className="text-3xl font-bold font-mono text-text-primary tracking-tight">{totalExecsFormatted}</span>
                       <span className="text-xs font-mono text-brand uppercase tracking-widest">[TOTAL]</span>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-[200px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
+                  <div className="flex-1 min-w-[180px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
                     <div className="text-[10px] text-text-secondary font-mono mb-2 uppercase tracking-widest flex items-center gap-2 group-hover:text-brand transition-colors"><BarChart3 size={12}/> SR_RATIO</div>
                     <div className="flex items-baseline gap-3">
                       <span className="text-3xl font-bold font-mono text-brand tracking-tight">{successRate}</span>
                       <span className="text-xs font-mono text-brand uppercase tracking-widest">[OK]</span>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-[200px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
+                  <div className="flex-1 min-w-[180px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
                     <div className="text-[10px] text-text-secondary font-mono mb-2 uppercase tracking-widest flex items-center gap-2 group-hover:text-warning transition-colors"><Cpu size={12}/> ERR_TOTAL</div>
                     <div className="flex items-baseline gap-3">
                       <span className="text-3xl font-bold font-mono text-warning tracking-tight shadow-[0_0_10px_rgba(255,0,60,0.5)]">{errors24h}</span>
                       <span className="text-xs font-mono text-warning uppercase tracking-widest">[ERR]</span>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-[200px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
+                  <div className="flex-1 min-w-[180px] p-4 bg-card border border-border flex flex-col justify-center hover:border-brand transition-colors group">
                     <div className="text-[10px] text-text-secondary font-mono mb-2 uppercase tracking-widest flex items-center gap-2 group-hover:text-brand transition-colors"><HardDrive size={12}/> CMPT_AVG</div>
                     <div className="flex items-baseline gap-3">
-                      <span className="text-3xl font-bold font-mono text-text-primary tracking-tight">
-                        {avgCompTime === '---' ? '---' : avgCompTime.replace('ms', '')}
-                      </span>
-                      {avgCompTime !== '---' && <span className="text-sm font-mono text-text-secondary">ms</span>}
+                      <span className="text-3xl font-bold font-mono text-text-primary tracking-tight">{avgCompTime}</span>
                       <span className="text-xs font-mono text-brand uppercase tracking-widest ml-1">[AVG]</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  {/* Main Chart */}
+                  {/* Main Chart — now with success/fail overlay */}
                   <div className="bg-card border border-border p-5 h-[320px] flex flex-col relative overflow-hidden group hover:border-brand/50 transition-colors">
                     <div className="flex justify-between items-center mb-6 relative z-10">
                       <h3 className="text-xs font-mono font-bold tracking-widest uppercase text-text-primary flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-brand"></span>
                         Execution_Volume [24h]
                       </h3>
-                      <div className="flex items-center gap-2 bg-black border border-border p-1">
-                        <button className="px-3 py-1 text-xs font-mono bg-brand text-black font-bold tracking-wider">24H</button>
-                        <button className="px-3 py-1 text-xs font-mono text-text-secondary hover:text-brand tracking-wider">7D</button>
-                        <button className="px-3 py-1 text-xs font-mono text-text-secondary hover:text-brand tracking-wider">30D</button>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 text-[9px] font-mono uppercase tracking-widest">
+                          <span className="flex items-center gap-1"><span className="w-2 h-1 bg-success"></span> Success</span>
+                          <span className="flex items-center gap-1"><span className="w-2 h-1 bg-warning"></span> Failed</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex-1 w-full min-h-0 relative z-10">
@@ -376,8 +281,12 @@ function App() {
                         <AreaChart data={dynamicChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorExec" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#39ff14" stopOpacity={0.4}/>
+                              <stop offset="5%" stopColor="#39ff14" stopOpacity={0.3}/>
                               <stop offset="95%" stopColor="#39ff14" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ff003c" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#ff003c" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="1 4" stroke="#1f1f1f" vertical={false} />
@@ -393,6 +302,23 @@ function App() {
                             fill="url(#colorExec)" 
                             activeDot={{ r: 0, fill: '#39ff14', stroke: '#39ff14', strokeWidth: 2 }}
                           />
+                          <Area 
+                            type="step" 
+                            dataKey="success" 
+                            stroke="#39ff14" 
+                            strokeWidth={0} 
+                            fillOpacity={0} 
+                            fill="transparent"
+                          />
+                          <Area 
+                            type="step" 
+                            dataKey="failed" 
+                            stroke="#ff003c" 
+                            strokeWidth={1.5} 
+                            strokeDasharray="4 2"
+                            fillOpacity={1} 
+                            fill="url(#colorFailed)" 
+                          />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -405,13 +331,8 @@ function App() {
                         <Activity size={14} className="text-brand animate-pulse" />
                         SYS_STREAM :: LIVE
                       </h3>
-                      <div className="flex items-center gap-3">
-                        <button className="text-[10px] font-mono tracking-widest uppercase text-text-secondary hover:text-brand hover:border-brand flex items-center gap-2 border border-border px-3 py-1.5 bg-black transition-colors">
-                          <ListFilter size={12} /> Apply_Filter
-                        </button>
-                      </div>
                     </div>
-                    <ExecutionMonitor executions={executions} workflows={workflows} />
+                    <ExecutionMonitor executions={executions} workflows={workflows} onRetryExecution={retryExecution} />
                   </div>
                 </div>
               </div>
@@ -419,14 +340,25 @@ function App() {
 
             {activeTab === 'workflows' && (
               <div className="animate-in fade-in duration-300">
-                <Workflows workflows={workflows} />
+                <Workflows 
+                  workflows={workflows} 
+                  executions={executions}
+                  onToggleWorkflow={toggleWorkflow}
+                  onRetryExecution={retryExecution}
+                />
               </div>
             )}
             
-            {activeTab === 'settings' && (
-              <div className="flex items-center justify-center h-full min-h-[400px] text-brand font-mono text-sm animate-in fade-in uppercase tracking-widest">
-                <span className="animate-pulse">&gt; SYS_CONFIG_OFFLINE_</span>
-              </div>
+            {activeTab === 'system' && (
+              <SystemHealth 
+                workflows={workflows}
+                executions={executions}
+                credentials={credentials}
+                instanceHealthy={instanceHealthy}
+                connectionStatus={connectionStatus}
+                lastRefreshedAt={lastRefreshedAt}
+                onRefresh={refresh}
+              />
             )}
 
           </div>

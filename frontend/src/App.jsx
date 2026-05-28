@@ -212,31 +212,31 @@ export default function App() {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans selection:bg-brand selection:text-white text-sm">
-      <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between z-10 relative">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-brand selection:text-white text-sm bg-transparent">
+      <header className="border-b border-white/5 bg-background/70 backdrop-blur-xl px-6 py-3 flex items-center justify-between z-50 sticky top-0 shadow-sm shadow-black/20">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-brand rounded-md text-white flex items-center justify-center font-bold text-lg leading-none shadow-brand">
+          <div className="w-7 h-7 bg-brand rounded-md text-white flex items-center justify-center font-bold text-lg leading-none shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-105 cursor-default">
             n
           </div>
-          <h1 className="font-semibold text-lg tracking-tight text-text-primary">
-            n8n<span className="text-text-muted font-normal">.terminal</span>
+          <h1 className="font-semibold text-lg tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+            n8n<span className="text-zinc-500 font-normal">.terminal</span>
           </h1>
-          <div className="hidden md:flex items-center gap-2 ml-4 text-[11px] text-text-muted font-mono">
-            <CircleDot size={10} className="text-brand" /> {N8N_PUBLIC_URL.replace('https://', '')}
+          <div className="hidden md:flex items-center gap-2 ml-4 text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 shadow-inner">
+            <CircleDot size={10} className="text-brand animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.8)] rounded-full" /> {N8N_PUBLIC_URL.replace('https://', '')}
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-1 bg-background border border-border p-1 rounded-lg">
+        <nav className="hidden md:flex items-center gap-1 bg-black/40 border border-white/5 p-1 rounded-lg backdrop-blur-md shadow-inner">
           {TABS.map((t) => {
             const active = tab === t.key;
             return (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 ease-out flex items-center gap-1.5 border ${
                   active
-                    ? 'bg-card border border-border text-text-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-white/10 border-white/10 text-white shadow-sm shadow-black/40'
+                    : 'border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
                 }`}
               >
                 <t.icon size={13} />
@@ -249,30 +249,32 @@ export default function App() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setPaletteOpen(true)}
-            className="hidden md:flex items-center gap-2 text-xs text-text-secondary hover:text-text-primary border border-border bg-background rounded-md px-2.5 py-1.5 transition-colors"
+            className="hidden md:flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 border border-white/5 bg-white/5 hover:bg-white/10 rounded-md px-2.5 py-1.5 transition-all duration-300 ease-out shadow-inner"
             title="Command palette (Cmd+K)"
           >
             <Search size={12} />
             <span className="font-mono">Search</span>
-            <kbd className="text-[9px] font-mono text-text-muted border border-border rounded px-1 py-0.5 ml-1">
+            <kbd className="text-[9px] font-mono text-zinc-500 border border-white/10 rounded px-1 py-0.5 ml-1 bg-black/40">
               ⌘K
             </kbd>
           </button>
-          <HealthPill health={health} />
+          <div className="bg-black/40 border border-white/5 rounded-md px-2 py-1.5 backdrop-blur-md shadow-inner">
+            <HealthPill health={health} />
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 flex overflow-hidden bg-background">
-        <aside className="w-14 border-r border-border bg-card flex flex-col items-center py-5 gap-2 z-10 relative hidden sm:flex">
+      <main className="flex-1 flex overflow-hidden bg-transparent">
+        <aside className="w-14 border-r border-white/5 bg-background/60 backdrop-blur-xl flex flex-col items-center py-5 gap-2 z-40 relative hidden sm:flex shadow-sm shadow-black/20">
           <a
             href={`${N8N_PUBLIC_URL}/workflows`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 text-text-secondary hover:text-brand transition-colors rounded-lg group relative"
+            className="p-2 text-zinc-400 hover:text-white transition-all duration-300 ease-out rounded-lg group relative hover:scale-105 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
             title="Open n8n editor"
           >
             <ExternalLink size={18} />
-            <span className="absolute left-12 bg-card text-xs px-2 py-1 hidden group-hover:block whitespace-nowrap z-50 border border-border text-text-primary rounded shadow-lg">
+            <span className="absolute left-12 bg-card text-xs px-2 py-1 hidden group-hover:block whitespace-nowrap z-50 border border-white/10 text-white rounded shadow-xl backdrop-blur-md">
               Open editor
             </span>
           </a>
@@ -282,10 +284,10 @@ export default function App() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`p-2 transition-colors rounded-lg group relative ${
+                className={`p-2 transition-all duration-300 ease-out rounded-lg group relative hover:scale-105 ${
                   active
-                    ? 'text-brand bg-brand/10 border border-brand/20'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                    ? 'text-brand bg-brand/15 border border-brand/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
                 title={t.label}
               >

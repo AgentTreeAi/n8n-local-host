@@ -17,5 +17,13 @@ Unregister-ScheduledTask -TaskName "n8n-daily-backup" -Confirm:$false -ErrorActi
 Register-ScheduledTask -TaskName "n8n-daily-backup" -Action $bAction -Trigger $bTrigger -Settings $bSettings -RunLevel Highest -Force
 Write-Output "Registered: n8n-daily-backup (daily 3AM)"
 
+# === Git Sync (every hour) ===
+$gAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument '-NoProfile -ExecutionPolicy Bypass -File "c:\Users\admin\Desktop\n8n local host\git-sync.ps1"'
+$gTrigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Hours 1) -Once -At (Get-Date)
+$gSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopOnIdleEnd -AllowStartIfOnBatteries
+Unregister-ScheduledTask -TaskName "n8n-git-sync" -Confirm:$false -ErrorAction SilentlyContinue
+Register-ScheduledTask -TaskName "n8n-git-sync" -Action $gAction -Trigger $gTrigger -Settings $gSettings -RunLevel Highest -Force
+Write-Output "Registered: n8n-git-sync (every 1 hour)"
+
 # === Verify ===
 Get-ScheduledTask | Where-Object { $_.TaskName -like "n8n-*" } | Format-Table TaskName, State, TaskPath

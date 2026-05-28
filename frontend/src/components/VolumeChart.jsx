@@ -37,33 +37,34 @@ export default function VolumeChart({ executions, hours = 24 }) {
   const hasData = data.some((d) => d.total > 0);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-sm h-[340px] flex flex-col">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-xl p-5 shadow-inner h-[340px] flex flex-col relative overflow-hidden group transition-all duration-300 hover:border-white/10">
+      <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+      <div className="flex justify-between items-center mb-4 relative z-10">
         <div>
-          <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <h3 className="text-sm font-medium text-white flex items-center gap-2">
             <Activity size={14} className="text-brand" /> Execution Volume ({hours}h)
           </h3>
           <p className="text-[11px] text-text-muted mt-0.5">
             Hourly buckets · success vs error split
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-black/40 border border-white/5 rounded-lg p-1 backdrop-blur-md shadow-inner relative z-10">
           <button
             onClick={() => setMode('stack')}
-            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1 text-xs font-medium rounded transition-all duration-300 ease-out border ${
               mode === 'stack'
-                ? 'bg-card border border-border shadow-sm text-text-primary'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-white/10 border-white/10 text-white shadow-sm shadow-black/40'
+                : 'border-transparent text-zinc-400 hover:text-white hover:bg-white/5'
             }`}
           >
             Bar
           </button>
           <button
             onClick={() => setMode('area')}
-            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1 text-xs font-medium rounded transition-all duration-300 ease-out border ${
               mode === 'area'
-                ? 'bg-card border border-border shadow-sm text-text-primary'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-white/10 border-white/10 text-white shadow-sm shadow-black/40'
+                : 'border-transparent text-zinc-400 hover:text-white hover:bg-white/5'
             }`}
           >
             Area

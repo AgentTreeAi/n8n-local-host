@@ -1,0 +1,448 @@
+{
+  "name": "Morning Revenue Briefing — Demo",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## ☀️ Morning Revenue Briefing\n\n**What it does:** Pulls Todoist tasks, Google Calendar events, and priority Gmail messages each morning. Claude turns the raw data into a personalized briefing. Delivered to Gmail + Slack.\n\n**Demo mode (default):** injects realistic seed data — perfect for clean video takes. Flip `demo_mode` to `false` in the **Config** node to hit live APIs.\n\n→ Built for AgentTree demo content. See pre-shoot checklist at the bottom.",
+        "height": 200,
+        "width": 1200,
+        "color": 7
+      },
+      "id": "sticky-title",
+      "name": "Sticky: Title",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -260]
+    },
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "Run Manually (Demo)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "trigger-schedule",
+      "name": "7:30 AM Weekdays",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 280]
+    },
+    {
+      "parameters": {
+        "content": "### ① Triggers\n\nManual = for demos.\nSchedule = production (7:30 AM weekdays).",
+        "height": 140,
+        "width": 220,
+        "color": 5
+      },
+      "id": "sticky-triggers",
+      "name": "Sticky: Triggers",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-20, 420]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"demo_mode\": true,\n  \"persona\": {\n    \"business_name\": \"Mike's HVAC\",\n    \"owner_first_name\": \"Mike\",\n    \"timezone\": \"America/Los_Angeles\"\n  },\n  \"delivery\": {\n    \"recipient_email\": \"agenttree.ai@gmail.com\",\n    \"slack_channel\": \"#daily-briefing\"\n  },\n  \"ai\": {\n    \"model\": \"claude-sonnet-4-5\",\n    \"max_tokens\": 1200\n  }\n}",
+        "options": {}
+      },
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [240, 180]
+    },
+    {
+      "parameters": {
+        "content": "### ② Config\n\nAll the knobs in one place: demo flag, persona, recipient, model.",
+        "height": 140,
+        "width": 220,
+        "color": 5
+      },
+      "id": "sticky-config",
+      "name": "Sticky: Config",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [220, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-demo",
+              "leftValue": "={{ $json.demo_mode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-demo-mode",
+      "name": "Demo Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [480, 180]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Inject a controlled, realistic dataset for the Mike's HVAC demo.\n// Same shape as the Normalize Live Data output so downstream nodes don't care which path ran.\n\nconst config = $('Config').first().json;\nconst now = new Date();\nconst months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];\nconst dateLabel = `${dayNames[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;\n\nreturn [{\n  json: {\n    config,\n    date_label: dateLabel,\n    overdue_tasks: [\n      { content: \"Call Sarah Martinez re: AC unit estimate\", priority: \"P1\", days_overdue: 2, deadline_today: true },\n      { content: \"Send revised quote to Valley Fitness\", priority: \"P2\", days_overdue: 1 },\n      { content: \"Follow up — Johnson kitchen remodel (proposal sent 9 days ago)\", priority: \"P2\", days_overdue: 1 }\n    ],\n    today_tasks: [\n      { content: \"Prep notes for 11:30 Valley Fitness call\", priority: \"P1\" },\n      { content: \"Order replacement compressor for 742 Elm install\", priority: \"P2\" },\n      { content: \"Review insurance renewal docs\", priority: \"P3\" }\n    ],\n    calendar_events: [\n      { time: \"9:00 AM\", summary: \"Site visit — 742 Elm St (AC install estimate)\" },\n      { time: \"11:30 AM\", summary: \"Call with Valley Fitness (proposal review)\" },\n      { time: \"2:00 PM\", summary: \"Johnson kitchen follow-up\" },\n      { time: \"4:00 PM\", summary: \"New client intro — Camarillo Dental\" }\n    ],\n    priority_emails: [\n      { from: \"sarah.martinez@gmail.com\", subject: \"Re: AC quote — when can you come out?\", received: \"11:47 PM (last night)\" },\n      { from: \"jen@valleyfitness.com\", subject: \"Quick question before our 11:30\", received: \"7:14 AM\" },\n      { from: \"office@johnsonremodel.com\", subject: \"Decision update\", received: \"6:02 AM\" }\n    ],\n    pipeline: {\n      deals_closing_this_week: 3,\n      total_value_closing: 18400,\n      stale_deals: [\n        { name: \"Johnson kitchen remodel\", value: 8200, days_stale: 9, stage: \"Proposal Sent\" }\n      ],\n      new_lead: { name: \"Sarah Martinez\", source: \"website form\", est_value: 4200, received: \"11:47 PM last night\" }\n    }\n  }\n}];"
+      },
+      "id": "seed-data",
+      "name": "Seed Demo Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "content": "### ③a DEMO MODE\n\nCanned, realistic data for a Mike's HVAC walkthrough. Every take of the video looks identical.",
+        "height": 140,
+        "width": 240,
+        "color": 4
+      },
+      "id": "sticky-demo",
+      "name": "Sticky: Demo Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [700, -180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pass-config",
+              "name": "config",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "live-passthru",
+      "name": "Live Mode Hub",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, 320]
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "task",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filter": "(today | overdue)"
+        }
+      },
+      "id": "todoist-get",
+      "name": "Todoist: Today + Overdue",
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 2.2,
+      "position": [960, 200],
+      "credentials": {
+        "todoistApi": {
+          "id": "9phgu8r8c5dNtDZC",
+          "name": "Todoist account"
+        }
+      },
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary",
+          "cachedResultName": "Primary calendar"
+        },
+        "returnAll": true,
+        "options": {
+          "timeMin": "={{ $now.startOf('day').toISO() }}",
+          "timeMax": "={{ $now.endOf('day').toISO() }}",
+          "singleEvents": true
+        }
+      },
+      "id": "calendar-get",
+      "name": "Calendar: Today's Events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [960, 380],
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 5,
+        "simple": true,
+        "filters": {
+          "q": "is:unread is:important newer_than:1d",
+          "readStatus": "unread"
+        }
+      },
+      "id": "gmail-search",
+      "name": "Gmail: Priority Unread",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [960, 560],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail account"
+        }
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "### ③b LIVE MODE\n\nReal pulls in parallel: Todoist (today+overdue), Google Calendar (today), Gmail (priority unread).\n\n**Needs credential:** Google Calendar OAuth must be created in n8n UI before this branch works.",
+        "height": 200,
+        "width": 280,
+        "color": 6
+      },
+      "id": "sticky-live",
+      "name": "Sticky: Live Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [700, 760]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Normalize the three live API outputs into the same shape as Seed Demo Data.\n// Reach back to each fetch node by name so we don't depend on merge order.\n\nconst config = $('Config').first().json;\nconst now = new Date();\nconst months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];\nconst dateLabel = `${dayNames[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;\n\n// --- Todoist ---\nlet overdue = [];\nlet today = [];\ntry {\n  const todoistItems = $('Todoist: Today + Overdue').all().map(i => i.json);\n  const priorityMap = { 4: 'P1', 3: 'P2', 2: 'P3', 1: 'P4' };\n  for (const t of todoistItems) {\n    const dueDate = t.due ? new Date(t.due.date) : null;\n    const isOverdue = dueDate && dueDate < new Date(now.toDateString());\n    const entry = {\n      content: t.content,\n      priority: priorityMap[t.priority] || 'P4',\n      due_string: t.due ? t.due.string : ''\n    };\n    if (isOverdue) {\n      entry.days_overdue = Math.floor((now - dueDate) / 86400000);\n      overdue.push(entry);\n    } else {\n      today.push(entry);\n    }\n  }\n} catch (e) { /* todoist node returned nothing */ }\n\n// --- Calendar ---\nlet calendarEvents = [];\ntry {\n  const events = $(\"Calendar: Today's Events\").all().map(i => i.json);\n  calendarEvents = events.map(e => {\n    const startISO = e.start && (e.start.dateTime || e.start.date);\n    const startD = startISO ? new Date(startISO) : null;\n    const time = startD ? startD.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'All day';\n    return { time, summary: e.summary || '(no title)' };\n  });\n} catch (e) { /* calendar credential missing or no events */ }\n\n// --- Gmail ---\nlet priorityEmails = [];\ntry {\n  const msgs = $('Gmail: Priority Unread').all().map(i => i.json);\n  priorityEmails = msgs.slice(0, 5).map(m => {\n    const headers = (m.payload && m.payload.headers) || [];\n    const fromHeader = headers.find(h => h.name === 'From');\n    const subjHeader = headers.find(h => h.name === 'Subject');\n    return {\n      from: fromHeader ? fromHeader.value : (m.from || ''),\n      subject: subjHeader ? subjHeader.value : (m.subject || m.snippet || ''),\n      received: m.internalDate ? new Date(parseInt(m.internalDate)).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''\n    };\n  });\n} catch (e) { /* no priority emails */ }\n\nreturn [{\n  json: {\n    config,\n    date_label: dateLabel,\n    overdue_tasks: overdue,\n    today_tasks: today,\n    calendar_events: calendarEvents,\n    priority_emails: priorityEmails,\n    pipeline: null\n  }\n}];"
+      },
+      "id": "normalize-live",
+      "name": "Normalize Live Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 380]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-paths",
+      "name": "Merge Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1440, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: $json.config.ai.model,\n  max_tokens: $json.config.ai.max_tokens,\n  messages: [\n    {\n      role: \"user\",\n      content: `You are the chief of staff for ${$json.config.persona.owner_first_name} at ${$json.config.persona.business_name}.\\n\\nWrite a morning briefing from this data. RULES:\\n- Lead with the single most important thing to act on today.\\n- Plain English. No jargon.\\n- Every item must have a clear action.\\n- Call out anything unusual (stale high-value deals, after-hours leads, missed follow-ups).\\n- Concise — 60 seconds to read.\\n- Bullet points, not paragraphs.\\n- End with \\\"Top 3 priorities today:\\\" as a numbered list.\\n\\nOutput in this exact markdown structure:\\n\\n**Morning Briefing — ${$json.date_label}**\\n\\n**Overnight:** <one-liner about new leads / priority emails>\\n\\n**Pipeline:** <one-liner about deals + any stale callouts>\\n\\n**Overdue:** <bulleted list of missed follow-ups, or \\\"None — clean board\\\">\\n\\n**Today:** <bulleted list of calendar events with times>\\n\\n**Top 3 priorities today:**\\n1. <priority>\\n2. <priority>\\n3. <priority>\\n\\nDATA:\\n${JSON.stringify({ overdue: $json.overdue_tasks, today: $json.today_tasks, calendar: $json.calendar_events, emails: $json.priority_emails, pipeline: $json.pipeline }, null, 2)}`\n    }\n  ]\n}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "claude-generate",
+      "name": "Claude → Briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1680, 180],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "### ④ AI Generation\n\nClaude reads the raw data and writes a personalized briefing — like a chief of staff.\n\n**Needs credential:** create an `HTTP Header Auth` credential with name=`x-api-key` and value=your Anthropic API key, then bind it here.",
+        "height": 200,
+        "width": 280,
+        "color": 3
+      },
+      "id": "sticky-ai",
+      "name": "Sticky: AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1660, -180]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Parse Claude response, then build both Gmail HTML and Slack markdown outputs.\nconst input = $input.first().json;\nconst config = $('Config').first().json;\nconst dateLabel = ($('Merge Paths').first().json.date_label) || '';\n\nconst briefingMd = (input.content && input.content[0] && input.content[0].text) || '(no briefing generated)';\n\n// Minimal markdown → HTML for the email. Translates **bold**, line breaks, and bulleted/numbered lists.\nfunction mdToHtml(md) {\n  const lines = md.split(/\\r?\\n/);\n  let html = '';\n  let inList = false;\n  let listType = null;\n  for (const raw of lines) {\n    let line = raw.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');\n    const numMatch = line.match(/^\\s*(\\d+)\\.\\s+(.+)$/);\n    const bulletMatch = line.match(/^\\s*[-•]\\s+(.+)$/);\n    if (numMatch) {\n      if (!inList || listType !== 'ol') { if (inList) html += `</${listType}>`; html += '<ol style=\"padding-left:20px;margin:8px 0;\">'; inList = true; listType = 'ol'; }\n      html += `<li style=\"margin:4px 0;\">${numMatch[2]}</li>`;\n    } else if (bulletMatch) {\n      if (!inList || listType !== 'ul') { if (inList) html += `</${listType}>`; html += '<ul style=\"padding-left:20px;margin:8px 0;\">'; inList = true; listType = 'ul'; }\n      html += `<li style=\"margin:4px 0;\">${bulletMatch[1]}</li>`;\n    } else {\n      if (inList) { html += `</${listType}>`; inList = false; listType = null; }\n      if (line.trim() === '') html += '<div style=\"height:8px;\"></div>';\n      else html += `<p style=\"margin:6px 0;line-height:1.5;\">${line}</p>`;\n    }\n  }\n  if (inList) html += `</${listType}>`;\n  return html;\n}\n\nconst bodyHtml = mdToHtml(briefingMd);\nconst fullHtml = `<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f4f4f7;\"><div style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:640px;margin:24px auto;color:#1a1a1a;background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);\"><div style=\"background:#0f172a;color:white;padding:20px 24px;\"><div style=\"font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;\">${config.persona.business_name}</div><h1 style=\"margin:6px 0 0;font-size:22px;font-weight:600;\">Morning Briefing — ${dateLabel}</h1></div><div style=\"padding:24px;\">${bodyHtml}</div><div style=\"background:#f8fafc;color:#64748b;padding:14px 24px;font-size:11px;text-align:center;border-top:1px solid #e2e8f0;\">Generated by AgentTree · ${dateLabel}</div></div></body></html>`;\n\n// Slack uses *bold* not **bold**\nconst slackText = briefingMd.replace(/\\*\\*(.+?)\\*\\*/g, '*$1*');\nconst subject = `Daily Briefing — ${dateLabel}`;\n\nreturn [{\n  json: { config, subject, body_markdown: briefingMd, body_html: fullHtml, slack_text: slackText }\n}];"
+      },
+      "id": "format-output",
+      "name": "Format Email + Slack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 180]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.config.delivery.recipient_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.body_html }}",
+        "options": {}
+      },
+      "id": "gmail-send",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [2160, 80],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tAz2Z1W3R4tplbjc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.config.delivery.slack_channel }}",
+          "cachedResultName": "daily-briefing"
+        },
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "slack-send",
+      "name": "Send Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [2160, 280],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "### ⑤ Delivery\n\nSent in parallel to Gmail (HTML) + Slack (mrkdwn).\n\n**Needs credential:** Slack OAuth must be created in n8n UI.",
+        "height": 200,
+        "width": 240,
+        "color": 5
+      },
+      "id": "sticky-delivery",
+      "name": "Sticky: Delivery",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2140, -180]
+    },
+    {
+      "parameters": {
+        "content": "## 🎬 PRE-SHOOT CHECKLIST\n\n**Before clicking \"Test workflow\" on camera:**\n\n1. ✅ **Anthropic API key** — In n8n: Credentials → Create → `HTTP Header Auth` → name=`x-api-key`, value=`<your key>`. Bind it to the *Claude → Briefing* node.\n2. ✅ **Slack OAuth** — Credentials → Create → `Slack OAuth2 API`. Bind to *Send Slack*. Create a `#daily-briefing` channel in your Slack workspace, invite the bot.\n3. ✅ **Google Calendar** *(only for live mode)* — Credentials → Create → `Google Calendar OAuth2`. Bind to *Calendar: Today's Events*.\n4. ✅ **Demo mode is ON** by default — verify the **Config** node shows `\"demo_mode\": true`.\n5. ✅ **Recipient email** — already set to `agenttree.ai@gmail.com` in Config; change if needed.\n6. ✅ **Open three windows on camera:** the n8n canvas, your Gmail inbox, and the Slack channel.\n7. ✅ **Pin the workflow tab** so the executions panel is one click away.\n\n**Filming tip:** Demo mode = identical output every take. Run it 3 times in a row to pick the best take.",
+        "height": 360,
+        "width": 1200,
+        "color": 4
+      },
+      "id": "sticky-checklist",
+      "name": "Sticky: Pre-Shoot Checklist",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 980]
+    }
+  ],
+  "connections": {
+    "Run Manually (Demo)": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "7:30 AM Weekdays": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Demo Mode?", "type": "main", "index": 0 }]]
+    },
+    "Demo Mode?": {
+      "main": [
+        [{ "node": "Seed Demo Data", "type": "main", "index": 0 }],
+        [{ "node": "Live Mode Hub", "type": "main", "index": 0 }]
+      ]
+    },
+    "Seed Demo Data": {
+      "main": [[{ "node": "Merge Paths", "type": "main", "index": 0 }]]
+    },
+    "Live Mode Hub": {
+      "main": [[
+        { "node": "Todoist: Today + Overdue", "type": "main", "index": 0 },
+        { "node": "Calendar: Today's Events", "type": "main", "index": 0 },
+        { "node": "Gmail: Priority Unread", "type": "main", "index": 0 }
+      ]]
+    },
+    "Todoist: Today + Overdue": {
+      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+    },
+    "Calendar: Today's Events": {
+      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+    },
+    "Gmail: Priority Unread": {
+      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+    },
+    "Normalize Live Data": {
+      "main": [[{ "node": "Merge Paths", "type": "main", "index": 0 }]]
+    },
+    "Merge Paths": {
+      "main": [[{ "node": "Claude → Briefing", "type": "main", "index": 0 }]]
+    },
+    "Claude → Briefing": {
+      "main": [[{ "node": "Format Email + Slack", "type": "main", "index": 0 }]]
+    },
+    "Format Email + Slack": {
+      "main": [[
+        { "node": "Send Email", "type": "main", "index": 0 },
+        { "node": "Send Slack", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

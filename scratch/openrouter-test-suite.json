@@ -1,0 +1,306 @@
+{
+  "name": "OpenRouter Provider Test Suite",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 540]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "or-test-suite",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 340],
+      "webhookId": "or-test-suite"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const questions = [\n  { questionId: 1, question: 'What is your exact model name and which company created you? Be as specific as possible about the version.', topic: 'Self-identification' },\n  { questionId: 2, question: 'Write a Python function that finds two numbers in a list that sum to zero. Return null if none exist. Include type hints and a docstring.', topic: 'Code generation' },\n  { questionId: 3, question: 'Explain the key architectural difference between transformer self-attention and LSTM memory in exactly 3 sentences.', topic: 'Technical explanation' },\n  { questionId: 4, question: 'A farmer has 17 sheep. All but 9 die. How many sheep are left? Show your reasoning step by step.', topic: 'Reasoning trap' },\n  { questionId: 5, question: 'In a workflow with 5 parallel API calls where any one might fail, what is the cleanest architectural pattern to handle partial failures without stopping the entire workflow?', topic: 'Domain expertise' }\n];\nreturn questions;"
+      },
+      "id": "code-questions-001",
+      "name": "Code: Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "HTTP-Referer", "value": "https://n8n.workflowsolution.org" }, { "name": "X-Title", "value": "n8n Provider Test Suite" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'anthropic/claude-opus-4.7', messages: [{ role: 'user', content: $json.question }], provider: { order: ['Anthropic'], allow_fallbacks: false }, max_tokens: 1200 }) }}",
+        "options": { "timeout": 60000, "response": { "response": { "fullResponse": true } } }
+      },
+      "id": "http-anthropic-001",
+      "name": "HTTP: Anthropic Opus 4.7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "onError": "continueRegularOutput",
+      "position": [700, 80],
+      "credentials": { "openRouterApi": { "id": "FFXuwewxW9sr0ckR", "name": "n8n local" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const q = $('Code: Questions').item.json;\nconst r = $input.item.json;\nconst body = r.body || r;\nconst headers = r.headers || {};\nreturn { json: { questionId: q.questionId, question: q.question, topic: q.topic, modelLabel: 'Anthropic Claude Opus 4.7', modelSlug: 'anthropic/claude-opus-4.7', providerPinned: 'Anthropic', providerActual: headers['x-openrouter-provider'] || headers['X-Openrouter-Provider'] || 'see-model-field', modelActual: body.model || 'unknown', response: body.choices?.[0]?.message?.content || 'ERROR: ' + JSON.stringify(body).substring(0, 300), promptTokens: body.usage?.prompt_tokens || 0, completionTokens: body.usage?.completion_tokens || 0 } };"
+      },
+      "id": "extract-anthropic-001",
+      "name": "Extract: Anthropic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "HTTP-Referer", "value": "https://n8n.workflowsolution.org" }, { "name": "X-Title", "value": "n8n Provider Test Suite" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'openai/o3', messages: [{ role: 'user', content: $json.question }], provider: { order: ['OpenAI'], allow_fallbacks: false }, max_tokens: 1200 }) }}",
+        "options": { "timeout": 120000, "response": { "response": { "fullResponse": true } } }
+      },
+      "id": "http-openai-001",
+      "name": "HTTP: OpenAI o3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "onError": "continueRegularOutput",
+      "position": [700, 260],
+      "credentials": { "openRouterApi": { "id": "FFXuwewxW9sr0ckR", "name": "n8n local" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const q = $('Code: Questions').item.json;\nconst r = $input.item.json;\nconst body = r.body || r;\nconst headers = r.headers || {};\nreturn { json: { questionId: q.questionId, question: q.question, topic: q.topic, modelLabel: 'OpenAI o3', modelSlug: 'openai/o3', providerPinned: 'OpenAI', providerActual: headers['x-openrouter-provider'] || headers['X-Openrouter-Provider'] || 'see-model-field', modelActual: body.model || 'unknown', response: body.choices?.[0]?.message?.content || 'ERROR: ' + JSON.stringify(body).substring(0, 300), promptTokens: body.usage?.prompt_tokens || 0, completionTokens: body.usage?.completion_tokens || 0 } };"
+      },
+      "id": "extract-openai-001",
+      "name": "Extract: OpenAI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "HTTP-Referer", "value": "https://n8n.workflowsolution.org" }, { "name": "X-Title", "value": "n8n Provider Test Suite" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'google/gemini-3.1-pro-preview', messages: [{ role: 'user', content: $json.question }], provider: { order: ['Google AI Studio'], allow_fallbacks: false }, max_tokens: 8000, temperature: 0.7 }) }}",
+        "options": { "timeout": 120000, "response": { "response": { "fullResponse": true } } }
+      },
+      "id": "http-google-001",
+      "name": "HTTP: Google Gemini 3.1 Pro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "onError": "continueRegularOutput",
+      "position": [700, 440],
+      "credentials": { "openRouterApi": { "id": "FFXuwewxW9sr0ckR", "name": "n8n local" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const q = $('Code: Questions').item.json;\nconst r = $input.item.json;\nconst body = r.body || r;\nconst headers = r.headers || {};\nreturn { json: { questionId: q.questionId, question: q.question, topic: q.topic, modelLabel: 'Google Gemini 3.1 Pro Preview', modelSlug: 'google/gemini-3.1-pro-preview', providerPinned: 'Google AI Studio', providerActual: headers['x-openrouter-provider'] || headers['X-Openrouter-Provider'] || 'see-model-field', modelActual: body.model || 'unknown', response: body.choices?.[0]?.message?.content || 'ERROR: ' + JSON.stringify(body).substring(0, 300), promptTokens: body.usage?.prompt_tokens || 0, completionTokens: body.usage?.completion_tokens || 0 } };"
+      },
+      "id": "extract-google-001",
+      "name": "Extract: Google",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "HTTP-Referer", "value": "https://n8n.workflowsolution.org" }, { "name": "X-Title", "value": "n8n Provider Test Suite" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek/deepseek-chat', messages: [{ role: 'user', content: $json.question }], provider: { order: ['Fireworks', 'Together', 'DeepSeek'], allow_fallbacks: true, require_parameters: true }, max_tokens: 1200, temperature: 0.7 }) }}",
+        "options": { "timeout": 60000, "response": { "response": { "fullResponse": true } } }
+      },
+      "id": "http-deepseek-001",
+      "name": "HTTP: DeepSeek V4 Pro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "onError": "continueRegularOutput",
+      "position": [700, 620],
+      "credentials": { "openRouterApi": { "id": "FFXuwewxW9sr0ckR", "name": "n8n local" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const q = $('Code: Questions').item.json;\nconst r = $input.item.json;\nconst body = r.body || r;\nconst headers = r.headers || {};\nreturn { json: { questionId: q.questionId, question: q.question, topic: q.topic, modelLabel: 'DeepSeek Chat (V3)', modelSlug: 'deepseek/deepseek-chat', providerPinned: 'DeepSeek', providerActual: headers['x-openrouter-provider'] || headers['X-Openrouter-Provider'] || 'see-model-field', modelActual: body.model || 'unknown', response: body.choices?.[0]?.message?.content || 'ERROR: ' + JSON.stringify(body).substring(0, 300), promptTokens: body.usage?.prompt_tokens || 0, completionTokens: body.usage?.completion_tokens || 0 } };"
+      },
+      "id": "extract-deepseek-001",
+      "name": "Extract: DeepSeek",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 620]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "HTTP-Referer", "value": "https://n8n.workflowsolution.org" }, { "name": "X-Title", "value": "n8n Provider Test Suite" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'x-ai/grok-4.20', messages: [{ role: 'user', content: $json.question }], provider: { order: ['xAI'], allow_fallbacks: false }, max_tokens: 1200, temperature: 0.7 }) }}",
+        "options": { "timeout": 60000, "response": { "response": { "fullResponse": true } } }
+      },
+      "id": "http-xai-001",
+      "name": "HTTP: xAI Grok 4.20",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "onError": "continueRegularOutput",
+      "position": [700, 800],
+      "credentials": { "openRouterApi": { "id": "FFXuwewxW9sr0ckR", "name": "n8n local" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const q = $('Code: Questions').item.json;\nconst r = $input.item.json;\nconst body = r.body || r;\nconst headers = r.headers || {};\nreturn { json: { questionId: q.questionId, question: q.question, topic: q.topic, modelLabel: 'xAI Grok 4.20', modelSlug: 'x-ai/grok-4.20', providerPinned: 'xAI', providerActual: headers['x-openrouter-provider'] || headers['X-Openrouter-Provider'] || 'see-model-field', modelActual: body.model || 'unknown', response: body.choices?.[0]?.message?.content || 'ERROR: ' + JSON.stringify(body).substring(0, 300), promptTokens: body.usage?.prompt_tokens || 0, completionTokens: body.usage?.completion_tokens || 0 } };"
+      },
+      "id": "extract-xai-001",
+      "name": "Extract: xAI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 800]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-1-001",
+      "name": "Merge 1of4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1140, 170]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-2-001",
+      "name": "Merge 2of4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-3-001",
+      "name": "Merge 3of4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1540, 440]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-4-001",
+      "name": "Merge 4of4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1740, 580]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst byModel = {};\nfor (const item of items) {\n  const d = item.json;\n  const key = d.modelLabel;\n  if (!byModel[key]) {\n    byModel[key] = { modelLabel: d.modelLabel, modelSlug: d.modelSlug, providerPinned: d.providerPinned, providerActual: d.providerActual, modelActual: d.modelActual, answers: [] };\n  }\n  byModel[key].answers.push({ questionId: d.questionId, topic: d.topic, question: d.question, response: d.response, totalTokens: (d.promptTokens || 0) + (d.completionTokens || 0) });\n}\nfor (const key of Object.keys(byModel)) {\n  byModel[key].answers.sort((a, b) => a.questionId - b.questionId);\n}\nreturn [{ json: { runAt: new Date().toISOString(), totalResponses: items.length, modelsRan: Object.keys(byModel).length, results: Object.values(byModel) } }];"
+      },
+      "id": "code-report-001",
+      "name": "Code: Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1940, 580]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Code: Questions", "type": "main", "index": 0 }]]
+    },
+    "Webhook Trigger": {
+      "main": [[{ "node": "Code: Questions", "type": "main", "index": 0 }]]
+    },
+    "Code: Questions": {
+      "main": [[
+        { "node": "HTTP: Anthropic Opus 4.7", "type": "main", "index": 0 },
+        { "node": "HTTP: OpenAI o3", "type": "main", "index": 0 },
+        { "node": "HTTP: Google Gemini 3.1 Pro", "type": "main", "index": 0 },
+        { "node": "HTTP: DeepSeek V4 Pro", "type": "main", "index": 0 },
+        { "node": "HTTP: xAI Grok 4.20", "type": "main", "index": 0 }
+      ]]
+    },
+    "HTTP: Anthropic Opus 4.7": {
+      "main": [[{ "node": "Extract: Anthropic", "type": "main", "index": 0 }]]
+    },
+    "HTTP: OpenAI o3": {
+      "main": [[{ "node": "Extract: OpenAI", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Google Gemini 3.1 Pro": {
+      "main": [[{ "node": "Extract: Google", "type": "main", "index": 0 }]]
+    },
+    "HTTP: DeepSeek V4 Pro": {
+      "main": [[{ "node": "Extract: DeepSeek", "type": "main", "index": 0 }]]
+    },
+    "HTTP: xAI Grok 4.20": {
+      "main": [[{ "node": "Extract: xAI", "type": "main", "index": 0 }]]
+    },
+    "Extract: Anthropic": {
+      "main": [[{ "node": "Merge 1of4", "type": "main", "index": 0 }]]
+    },
+    "Extract: OpenAI": {
+      "main": [[{ "node": "Merge 1of4", "type": "main", "index": 1 }]]
+    },
+    "Merge 1of4": {
+      "main": [[{ "node": "Merge 2of4", "type": "main", "index": 0 }]]
+    },
+    "Extract: Google": {
+      "main": [[{ "node": "Merge 2of4", "type": "main", "index": 1 }]]
+    },
+    "Merge 2of4": {
+      "main": [[{ "node": "Merge 3of4", "type": "main", "index": 0 }]]
+    },
+    "Extract: DeepSeek": {
+      "main": [[{ "node": "Merge 3of4", "type": "main", "index": 1 }]]
+    },
+    "Merge 3of4": {
+      "main": [[{ "node": "Merge 4of4", "type": "main", "index": 0 }]]
+    },
+    "Extract: xAI": {
+      "main": [[{ "node": "Merge 4of4", "type": "main", "index": 1 }]]
+    },
+    "Merge 4of4": {
+      "main": [[{ "node": "Code: Format Report", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

@@ -86,20 +86,20 @@ export default function ExecutionStream({
   };
 
   return (
-    <div className="border border-border bg-card rounded-xl flex flex-col shadow-sm overflow-hidden">
+    <div className="border border-white/5 bg-card/40 backdrop-blur-md rounded-xl flex flex-col shadow-inner overflow-hidden">
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3 p-3 border-b border-border">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-background border border-border rounded px-3 py-1.5 focus-within:border-brand transition-colors">
-          <Search size={14} className="text-text-muted shrink-0" />
+      <div className="flex flex-wrap items-center gap-3 p-3 border-b border-white/5 bg-black/20">
+        <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-black/40 border border-white/5 rounded px-3 py-1.5 focus-within:border-brand/50 focus-within:shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all duration-300">
+          <Search size={14} className="text-zinc-500 shrink-0" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by workflow name, execution ID..."
-            className="flex-1 bg-transparent outline-none text-sm text-text-primary placeholder:text-text-muted font-mono"
+            className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-zinc-600 font-mono"
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-background border border-border rounded p-1">
+        <div className="flex items-center gap-1 bg-black/40 border border-white/5 rounded p-1 shadow-inner backdrop-blur-sm">
           {STATUS_FILTERS.map((f) => {
             const active = filter === f.key;
             const n = counts[f.key];
@@ -107,15 +107,15 @@ export default function ExecutionStream({
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 text-[11px] font-medium rounded transition-all duration-300 ease-out flex items-center gap-1.5 border ${
                   active
-                    ? 'bg-card border border-border text-text-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-white/10 border-white/10 text-white shadow-sm shadow-black/40'
+                    : 'border-transparent text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {f.label}
                 {n != null && (
-                  <span className={`tabular-nums text-[10px] ${active ? 'text-text-muted' : 'text-text-muted'}`}>
+                  <span className={`tabular-nums text-[10px] ${active ? 'text-zinc-300' : 'text-zinc-500'}`}>
                     {n}
                   </span>
                 )}
@@ -127,7 +127,7 @@ export default function ExecutionStream({
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="text-xs font-medium text-text-secondary hover:text-text-primary flex items-center gap-1.5 border border-border px-2.5 py-1.5 rounded bg-background hover:bg-zinc-800 transition-colors disabled:opacity-50"
+          className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1.5 border border-white/5 px-2.5 py-1.5 rounded bg-black/40 hover:bg-white/10 transition-all duration-300 disabled:opacity-50 shadow-inner"
           title="Refresh"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Sync
@@ -141,10 +141,10 @@ export default function ExecutionStream({
       )}
 
       {/* Table */}
-      <div className="overflow-auto" style={maxHeight ? { maxHeight } : undefined}>
+      <div className="overflow-auto scrollbar-hide" style={maxHeight ? { maxHeight } : undefined}>
         <table className="w-full text-left border-collapse whitespace-nowrap min-w-[820px]">
           <thead className="sticky top-0 z-10">
-            <tr className="border-b border-border bg-zinc-900/95 backdrop-blur text-[10px] uppercase tracking-wider text-text-secondary font-medium">
+            <tr className="border-b border-white/5 bg-black/60 backdrop-blur-xl text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
               <th className="p-3 px-4 w-24 font-medium">Status</th>
               <th className="p-3 px-4 w-20 font-medium">ID</th>
               <th className="p-3 px-4 font-medium">Workflow</th>
@@ -163,13 +163,13 @@ export default function ExecutionStream({
                 <tr
                   key={exec.id}
                   onClick={() => onSelect?.(exec)}
-                  className="border-b border-border hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                  className="border-b border-white/5 hover:bg-white/5 transition-all duration-300 group cursor-pointer"
                 >
                   <td className="p-3 px-4">
                     <StatusBadge status={status} />
                   </td>
                   <td className="p-3 px-4">
-                    <span className="text-text-muted font-mono text-xs group-hover:text-text-primary transition-colors">
+                    <span className="text-zinc-500 font-mono text-xs group-hover:text-white transition-colors">
                       #{exec.id}
                     </span>
                   </td>
@@ -224,11 +224,11 @@ export default function ExecutionStream({
       </div>
 
       {hasMore && (
-        <div className="p-3 border-t border-border bg-background flex justify-center">
+        <div className="p-3 border-t border-white/5 bg-black/20 flex justify-center backdrop-blur-md">
           <button
             onClick={onLoadMore}
             disabled={loading}
-            className="text-xs font-medium text-text-secondary hover:text-text-primary border border-border rounded px-4 py-1.5 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+            className="text-xs font-medium text-zinc-400 hover:text-white border border-white/10 rounded px-4 py-1.5 bg-black/40 hover:bg-white/10 transition-all duration-300 disabled:opacity-50 shadow-inner"
           >
             {loading ? 'Loading…' : 'Load older executions'}
           </button>

@@ -3,13 +3,14 @@ import { formatDuration, formatNumber } from '../utils/format';
 
 function Stat({ icon: Icon, label, value, accent = 'text-text-primary', sub }) {
   return (
-    <div className="flex-1 min-w-[180px] p-4 px-5 border-r border-border last:border-r-0 flex flex-col justify-center">
-      <div className="text-[10px] text-text-secondary font-medium mb-1.5 uppercase tracking-[0.12em] flex items-center gap-1.5">
+    <div className="flex-1 min-w-[180px] p-4 px-5 border-r border-white/5 last:border-r-0 flex flex-col justify-center transition-all duration-300 ease-out hover:bg-white/5 group relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="text-[10px] text-zinc-400 font-medium mb-1.5 uppercase tracking-[0.12em] flex items-center gap-1.5 group-hover:text-zinc-300 transition-colors">
         <Icon size={12} /> {label}
       </div>
-      <div className="flex items-baseline gap-2">
+      <div className="flex items-baseline gap-2 relative z-10">
         <span className={`text-2xl font-bold tracking-tight tabular-nums ${accent}`}>{value}</span>
-        {sub && <span className="text-[11px] font-mono text-text-muted">{sub}</span>}
+        {sub && <span className="text-[11px] font-mono text-zinc-500">{sub}</span>}
       </div>
     </div>
   );
@@ -26,7 +27,7 @@ export default function StatsRibbon({ stats, workflowStats }) {
   const failureColor = stats.error > 0 ? 'text-warning' : 'text-text-primary';
 
   return (
-    <div className="border-b border-border bg-card flex overflow-x-auto">
+    <div className="border-b border-white/5 bg-card/40 backdrop-blur-md flex overflow-x-auto shadow-inner">
       <Stat
         icon={Activity}
         label="Executions"
