@@ -4,6 +4,51 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Default Theme (Zinc / Indigo) */
+  --color-background: #09090b;
+  --color-card: #18181b;
+  --color-border: #27272a;
+  --color-brand: #6366f1;
+  --color-brand-hover: #4f46e5;
+  --color-success: #10b981;
+  --color-warning: #f43f5e;
+  --color-text-primary: #f4f4f5;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --shadow-brand: 0 0 15px rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="cyberpunk"] {
+  /* Cyber-Industrial Theme */
+  --color-background: #05050A; /* Deep space black */
+  --color-card: #0D0D14; /* Slightly lighter card */
+  --color-border: #1A1A26;
+  --color-brand: #00F0FF; /* Electric Cyan */
+  --color-brand-hover: #00D0DF;
+  --color-success: #39FF14;
+  --color-warning: #BF00FF; /* Neon Purple */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A0A0C0;
+  --color-text-muted: #606080;
+  --shadow-brand: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+[data-theme="retro"] {
+  /* Retro-Futurist Terminal Theme */
+  --color-background: #000000;
+  --color-card: #0A0A0A;
+  --color-border: #113311; /* Dark green borders */
+  --color-brand: #39FF14; /* CRT Green */
+  --color-brand-hover: #32E012;
+  --color-success: #39FF14;
+  --color-warning: #FFB000; /* Amber */
+  --color-text-primary: #39FF14; /* Green text */
+  --color-text-secondary: rgba(57, 255, 20, 0.7);
+  --color-text-muted: rgba(57, 255, 20, 0.4);
+  --shadow-brand: 0 0 10px rgba(57, 255, 20, 0.2);
+}
+
 @layer base {
   body {
     @apply bg-background text-text-primary antialiased font-sans tracking-tight;

@@ -24,6 +24,7 @@ import ExecutionDetailDrawer from './components/ExecutionDetailDrawer';
 import WorkflowDetailDrawer from './components/WorkflowDetailDrawer';
 import CommandPalette from './components/CommandPalette';
 import ToastStack from './components/Toast';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
 
 const TABS = [
   { key: 'monitor', label: 'Pulse', icon: Activity },
@@ -263,6 +264,7 @@ function Dashboard() {
               ⌘K
             </kbd>
           </button>
+          <ThemeSwitcher />
           <div className="bg-black/40 border border-white/5 rounded-md px-2 py-1.5 backdrop-blur-md shadow-inner">
             <HealthPill health={health} />
           </div>
