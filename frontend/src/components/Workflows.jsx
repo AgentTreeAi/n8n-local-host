@@ -31,7 +31,7 @@ const SORT_OPTIONS = [
   { key: 'updatedAt', label: 'Last Updated' },
   { key: 'createdAt', label: 'Newest' },
   { key: 'name', label: 'Name A→Z' },
-  { key: 'health', label: 'Health (worst first)' },
+  { key: 'health', label: 'Health' },
 ];
 
 const HEALTH_COLOR = {
@@ -58,9 +58,108 @@ function TriggerChip({ kind }) {
   );
 }
 
+function WorkflowCard({ wf, onSelect, onToggle, toggling }) {
+  return (
+    <div
+      onClick={() => onSelect?.(wf)}
+      className="bg-card border border-border rounded-xl p-4 cursor-pointer active:bg-white/[0.04] transition-colors"
+    >
+      <div className="flex items-start gap-3">
+        {/* Status dot */}
+        <div className="mt-1.5 shrink-0">
+          {wf.active ? (
+            <div className="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+          ) : (
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 border border-zinc-600" />
+          )}
+        </div>
+
+        {/* Name + details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-0.5">
+            <span className="text-sm font-medium text-text-primary tracking-tight leading-snug">
+              {wf.name || '(untitled)'}
+            </span>
+            <span className={`text-[10px] font-medium shrink-0 capitalize ${HEALTH_COLOR[wf.health]}`}>
+              {wf.health}
+            </span>
+          </div>
+          <span className="text-[10px] text-text-muted font-mono block">{wf.id}</span>
+
+          {/* Triggers */}
+          {wf.triggers.kinds.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {wf.triggers.kinds.map((k) => <TriggerChip key={k} kind={k} />)}
+            </div>
+          )}
+
+          {/* Tags */}
+          {wf.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {wf.tags.slice(0, 3).map((t) => (
+                <span key={t.id} className="inline-flex items-center gap-1 text-[9px] text-text-muted bg-background border border-border px-1.5 py-0.5 rounded">
+                  <TagIcon size={8} /> {t.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="flex items-center gap-3 mt-2 text-[11px] text-text-muted font-mono">
+            <span className="flex items-center gap-1">
+              <Activity size={10} />
+              {wf.runCount} runs
+            </span>
+            {wf.successRate != null && (
+              <span className={
+                wf.successRate >= 95 ? 'text-success' : wf.successRate >= 80 ? 'text-text-secondary' : 'text-warning'
+              }>
+                {wf.successRate}% ok
+              </span>
+            )}
+            {wf.last && (
+              <span>{formatRelative(wf.last.startedAt)}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Action buttons — stopPropagation so they don't open the drawer */}
+        <div className="flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onToggle(wf)}
+            disabled={toggling === wf.id}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
+              wf.active
+                ? 'text-text-secondary border-border active:text-warning active:border-warning/30 active:bg-warning/10'
+                : 'text-text-secondary border-border active:text-success active:border-success/30 active:bg-success/10'
+            }`}
+            title={wf.active ? 'Deactivate' : 'Activate'}
+          >
+            {toggling === wf.id ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : wf.active ? (
+              <PowerOff size={15} />
+            ) : (
+              <Power size={15} />
+            )}
+          </button>
+          <a
+            href={`${N8N_PUBLIC_URL}/workflow/${wf.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-text-secondary active:bg-zinc-700 transition-colors"
+            title="Open in n8n editor"
+          >
+            <ExternalLink size={15} />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Workflows({ onSelect, pushToast }) {
   const { workflows, loading, error, lastFetched, refresh } = useWorkflows({ refreshInterval: 30000 });
-  // Pull a broad execution slice for health/last-run signal
   const { executions: execSlice } = useExecutions({ limit: 250, refreshInterval: 30000 });
 
   const [query, setQuery] = useState('');
@@ -68,7 +167,6 @@ export default function Workflows({ onSelect, pushToast }) {
   const [sortBy, setSortBy] = useState('updatedAt');
   const [togglingId, setTogglingId] = useState(null);
 
-  /* index executions by workflow */
   const execByWf = useMemo(() => {
     const m = new Map();
     for (const e of execSlice || []) {
@@ -145,19 +243,32 @@ export default function Workflows({ onSelect, pushToast }) {
   );
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
-      {/* CLI-style search bar */}
+    <div className="space-y-4 animate-in fade-in duration-300">
+      {/* Search — full width, standalone row */}
       <div className="bg-card border border-border rounded-xl shadow-sm p-2 flex items-center gap-2 focus-within:border-brand transition-all">
-        <div className="bg-background rounded p-2 text-brand">
-          <Search size={18} />
+        <div className="bg-background rounded p-2 text-brand shrink-0">
+          <Search size={16} />
         </div>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="> filter workflows by name, ID, or tag…"
-          className="flex-1 bg-transparent border-none outline-none px-2 py-2 text-sm font-mono placeholder:text-zinc-600 text-text-primary"
+          placeholder="> filter by name, ID, or tag…"
+          className="flex-1 bg-transparent border-none outline-none px-2 py-1.5 text-sm font-mono placeholder:text-zinc-600 text-text-primary min-w-0"
         />
-        <div className="flex items-center gap-2 pr-2">
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="text-text-muted hover:text-text-primary px-2 py-1 text-xs font-mono shrink-0"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {/* Filter + action controls — two-row on mobile, single row on desktop */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Status filter pills */}
+        <div className="flex items-center gap-1">
           {STATUS_FILTERS.map((f) => {
             const active = statusFilter === f.key;
             const n =
@@ -172,17 +283,20 @@ export default function Workflows({ onSelect, pushToast }) {
                     : 'text-text-secondary hover:bg-white/5'
                 }`}
               >
-                {f.label} ({n})
+                {f.label} <span className="opacity-60">({n})</span>
               </button>
             );
           })}
-          <div className="w-px h-4 bg-border mx-1" />
-          <div className="flex items-center gap-1 bg-background border border-border rounded px-2 py-1.5">
-            <ArrowUpDown size={12} className="text-text-muted" />
+        </div>
+
+        {/* Sort + Refresh + New */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-card border border-border rounded px-2 py-1.5 flex-1 sm:flex-none">
+            <ArrowUpDown size={12} className="text-text-muted shrink-0" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-xs text-text-secondary outline-none cursor-pointer"
+              className="bg-transparent text-xs text-text-secondary outline-none cursor-pointer w-full sm:w-auto"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.key} value={opt.key} className="bg-card">
@@ -194,7 +308,7 @@ export default function Workflows({ onSelect, pushToast }) {
           <button
             onClick={refresh}
             disabled={loading}
-            className="text-text-secondary hover:text-text-primary border border-border rounded px-2 py-1.5 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+            className="text-text-secondary hover:text-text-primary border border-border rounded px-2.5 py-1.5 hover:bg-zinc-800 transition-colors disabled:opacity-50 shrink-0"
             title={lastFetched ? `Last synced ${formatRelative(lastFetched.toISOString())}` : 'Sync'}
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -203,7 +317,7 @@ export default function Workflows({ onSelect, pushToast }) {
             href={`${N8N_PUBLIC_URL}/workflow/new`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-brand text-white text-xs px-4 py-1.5 rounded flex items-center gap-1.5 hover:bg-brand-hover transition-colors font-medium shadow-brand"
+            className="bg-brand text-white text-xs px-3 py-1.5 rounded flex items-center gap-1.5 hover:bg-brand-hover transition-colors font-medium shadow-brand shrink-0"
           >
             <Plus size={13} /> New
           </a>
@@ -212,13 +326,37 @@ export default function Workflows({ onSelect, pushToast }) {
 
       {error && (
         <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 flex items-center gap-2">
-          <AlertCircle size={14} className="text-warning" />
+          <AlertCircle size={14} className="text-warning shrink-0" />
           <span className="text-xs text-warning font-mono">{error}</span>
         </div>
       )}
 
-      {/* High-density list */}
-      <div className="border border-border bg-card rounded-xl flex flex-col shadow-sm overflow-hidden">
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-2">
+        {loading && filtered.length === 0 ? (
+          <div className="text-center text-text-muted text-sm py-12 flex flex-col items-center gap-3">
+            <Loader2 size={20} className="animate-spin" />
+            Fetching workflows…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center text-text-muted text-sm py-12">
+            No workflows match your filter.
+          </div>
+        ) : (
+          filtered.map((wf) => (
+            <WorkflowCard
+              key={wf.id}
+              wf={wf}
+              onSelect={onSelect}
+              onToggle={handleToggle}
+              toggling={togglingId}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Desktop table — hidden on mobile */}
+      <div className="hidden md:block border border-border bg-card rounded-xl shadow-sm overflow-x-auto">
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
             <tr className="border-b border-border bg-zinc-900/60 text-[10px] uppercase tracking-wider text-text-secondary font-medium">

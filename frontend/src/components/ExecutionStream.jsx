@@ -99,7 +99,7 @@ export default function ExecutionStream({
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-black/40 border border-white/5 rounded p-1 shadow-inner backdrop-blur-sm">
+        <div className="flex flex-wrap items-center gap-1 bg-black/40 border border-white/5 rounded p-1 shadow-inner backdrop-blur-sm">
           {STATUS_FILTERS.map((f) => {
             const active = filter === f.key;
             const n = counts[f.key];

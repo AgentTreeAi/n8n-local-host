@@ -270,7 +270,7 @@ function Dashboard() {
       </header>
 
       <main className="flex-1 flex overflow-hidden bg-transparent">
-        <aside className="w-14 border-r border-white/5 bg-background/60 backdrop-blur-xl flex flex-col items-center py-5 gap-2 z-40 relative hidden sm:flex shadow-sm shadow-black/20">
+        <aside className="w-14 border-r border-white/5 bg-background/60 backdrop-blur-xl flex flex-col items-center py-5 gap-2 z-40 relative hidden md:flex shadow-sm shadow-black/20">
           <a
             href={`${N8N_PUBLIC_URL}/workflows`}
             target="_blank"
