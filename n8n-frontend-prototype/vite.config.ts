@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => {
               type: 'image/png'
             }
           ]
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module',
         }
       })
     ],
