@@ -40,6 +40,14 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Endpoint not allowed' });
   }
 
+  // Deleting workflows is never permitted through the public app. Activate /
+  // deactivate (POST .../activate|deactivate) and execution deletes are still
+  // allowed. We match the path portion only, ignoring any query string.
+  const pathOnly = safeEndpoint.split('?')[0];
+  if (req.method === 'DELETE' && /^\/api\/v1\/workflows\/[^/]+$/.test(pathOnly)) {
+    return res.status(403).json({ error: 'Deleting workflows is not allowed' });
+  }
+
   const targetUrl = process.env.N8N_URL || 'https://n8n.workflowsolution.org';
   const apiKey = process.env.N8N_API_KEY;
   if (!apiKey) {

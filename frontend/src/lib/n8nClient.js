@@ -80,9 +80,9 @@ export async function setWorkflowActive(id, active) {
   return active ? activateWorkflow(id) : deactivateWorkflow(id);
 }
 
-export async function deleteWorkflow(id) {
-  return request(`/workflows/${id}`, { method: 'DELETE' });
-}
+// Note: deleting workflows is intentionally not exposed by this client, and is
+// also blocked server-side by the proxy. Activate/deactivate is the only
+// state-changing workflow action available from the app.
 
 /* ── Executions ────────────────────────────────────────────────── */
 
