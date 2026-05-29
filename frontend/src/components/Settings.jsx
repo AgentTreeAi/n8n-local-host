@@ -40,8 +40,9 @@ export default function Settings() {
     return () => clearInterval(id);
   }, []);
 
-  const apiKey = import.meta.env.VITE_N8N_API_KEY || '';
-  const maskedKey = apiKey ? `${apiKey.slice(0, 12)}…${apiKey.slice(-8)}` : '(not set)';
+  const authRoute = import.meta.env.DEV
+    ? 'Vite dev proxy (X-N8N-API-KEY injected)'
+    : '/api/proxy (Vercel function, X-N8N-API-KEY injected)';
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300 max-w-3xl">
@@ -77,7 +78,8 @@ export default function Settings() {
           mono
         />
         <Row label="Auth header" value="X-N8N-API-KEY" mono />
-        <Row label="API key" value={maskedKey} mono />
+        <Row label="Auth routing" value={authRoute} mono />
+        <Row label="API key" value="server-side (N8N_API_KEY env)" mono />
 
         <div className="flex items-center gap-2 mt-4">
           <button

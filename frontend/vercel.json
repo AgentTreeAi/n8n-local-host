@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://n8n.workflowsolution.org/api/:path*"
+      "source": "/api/v1/:path*",
+      "destination": "/api/proxy?endpoint=/api/v1/:path*"
+    },
+    {
+      "source": "/healthz",
+      "destination": "https://n8n.workflowsolution.org/healthz"
     },
     {
       "source": "/webhook/:path*",

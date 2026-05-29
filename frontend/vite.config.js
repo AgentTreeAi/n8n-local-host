@@ -1,9 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, '../', '');
+  const target = env.N8N_URL || 'https://n8n.workflowsolution.org';
+  const apiKey = env.N8N_API_KEY || env.VITE_N8N_API_KEY;
+
+  return {
   plugins: [
     react(),
     VitePWA({
@@ -39,18 +44,28 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://n8n.workflowsolution.org',
+        target,
         changeOrigin: true,
         secure: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            if (apiKey) proxyReq.setHeader('X-N8N-API-KEY', apiKey);
+          });
+        },
+      },
+      '/healthz': {
+        target,
+        changeOrigin: true,
       },
       '/webhook': {
-        target: 'https://n8n.workflowsolution.org',
+        target,
         changeOrigin: true,
       },
       '/webhook-test': {
-        target: 'https://n8n.workflowsolution.org',
+        target,
         changeOrigin: true,
       }
     }
   }
+  };
 })

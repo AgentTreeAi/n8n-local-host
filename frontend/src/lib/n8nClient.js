@@ -1,17 +1,15 @@
 /**
  * n8n API client — single source of truth for all REST calls.
- * In dev, Vite proxies /api & /webhook to https://n8n.workflowsolution.org.
- * In prod the same paths work if served from the same origin or proxied.
+ * Auth header is injected server-side: by the Vite dev proxy locally,
+ * and by /api/proxy.js (reading N8N_API_KEY env) on Vercel.
  */
 
-const API_KEY = import.meta.env.VITE_N8N_API_KEY;
 const BASE_URL = '/api/v1';
 
 export const N8N_PUBLIC_URL = 'https://n8n.workflowsolution.org';
 
 const baseHeaders = {
   Accept: 'application/json',
-  'X-N8N-API-KEY': API_KEY,
 };
 
 const jsonHeaders = {
