@@ -8,5 +8,14 @@ backups/
 mcp_config.json
 *.ico
 *.png
+# Frontend PWA / Apple icons must be tracked so Vercel ships them
+!frontend/public/apple-touch-icon.png
+!frontend/public/apple-touch-icon-1024.png
+!frontend/public/pwa-192x192.png
+!frontend/public/pwa-512x512.png
+!n8n-frontend-prototype/public/apple-touch-icon.png
+!n8n-frontend-prototype/public/pwa-192x192.png
+!n8n-frontend-prototype/public/pwa-512x512.png
+!n8n-frontend-prototype/public/favicon.ico
 query
 node_modules/
