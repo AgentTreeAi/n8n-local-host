@@ -81,6 +81,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 function App() {
   const [activeTab, setActiveTab] = useState('monitor');
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
   const {
     workflows, executions, credentials,
     loading, connectionStatus, instanceHealthy, lastRefreshedAt,
@@ -90,12 +91,16 @@ function App() {
   const urgentAlertCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
 
   const handleAlertClick = (workflowName: string | null) => {
-    if (!workflowName) return;
-    setActiveTab('workflows');
-    // WorkflowDetailPanel is opened from inside the Workflows tab; we route the user there
-    // and the workflow row click handles the rest. A deeper preselect would require lifting
-    // the panel state into App, which we can do next iteration.
-    void workflowName;
+    if (!workflowName || !workflows) return;
+    const match = workflows.find(w => w.name === workflowName);
+    if (match) {
+      setSelectedWorkflowId(match.id);
+      setActiveTab('workflows');
+    } else {
+      // Source workflow is gone (e.g. throwaway probe). Still navigate so the user can search.
+      setSelectedWorkflowId(null);
+      setActiveTab('workflows');
+    }
   };
 
   // Stats calculations
@@ -374,11 +379,13 @@ function App() {
 
             {activeTab === 'workflows' && (
               <div className="animate-in fade-in duration-300">
-                <Workflows 
-                  workflows={workflows} 
+                <Workflows
+                  workflows={workflows}
                   executions={executions}
                   onToggleWorkflow={toggleWorkflow}
                   onRetryExecution={retryExecution}
+                  selectedWorkflowId={selectedWorkflowId}
+                  onSelectWorkflow={setSelectedWorkflowId}
                 />
               </div>
             )}

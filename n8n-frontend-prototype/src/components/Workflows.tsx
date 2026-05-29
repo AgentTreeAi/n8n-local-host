@@ -1,4 +1,4 @@
-import { type FC, useState, useMemo } from 'react';
+import { type FC, useState, useMemo, useEffect, useRef } from 'react';
 import { Terminal, Activity, Clock, ChevronRight, ChevronDown, Search, Webhook, Timer, MousePointerClick, Zap, Power, PowerOff, Tag, GitBranch, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import type { MappedWorkflow, MappedExecution } from '../hooks/useN8nData';
 import { formatMs } from '../lib/formatters';
@@ -9,6 +9,8 @@ interface WorkflowsProps {
   executions: MappedExecution[] | null;
   onToggleWorkflow: (id: string, activate: boolean) => Promise<void>;
   onRetryExecution: (id: string) => Promise<void>;
+  selectedWorkflowId: string | null;
+  onSelectWorkflow: (id: string | null) => void;
 }
 
 const triggerIcons: Record<string, any> = {
@@ -19,12 +21,22 @@ const triggerIcons: Record<string, any> = {
   unknown: Zap,
 };
 
-const Workflows: FC<WorkflowsProps> = ({ workflows, executions, onToggleWorkflow, onRetryExecution }) => {
+const Workflows: FC<WorkflowsProps> = ({ workflows, executions, onToggleWorkflow, onRetryExecution, selectedWorkflowId, onSelectWorkflow }) => {
   const displayWorkflows = workflows || [];
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const expandedId = selectedWorkflowId;
+  const setExpandedId = (id: string | null) => onSelectWorkflow(id);
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!selectedWorkflowId) return;
+    const el = rowRefs.current[selectedWorkflowId];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedWorkflowId]);
 
   const filtered = useMemo(() => {
     return displayWorkflows.filter(wf => {
@@ -97,7 +109,11 @@ const Workflows: FC<WorkflowsProps> = ({ workflows, executions, onToggleWorkflow
           const wfExecutions = executions?.filter(e => e.workflowId === wf.id) || [];
 
           return (
-            <div key={wf.id} className="flex flex-col">
+            <div
+              key={wf.id}
+              ref={el => { rowRefs.current[wf.id] = el; }}
+              className="flex flex-col"
+            >
               <div 
                 onClick={() => setExpandedId(isExpanded ? null : wf.id)}
                 className={`border bg-[#0a0a0a] flex flex-col group cursor-pointer relative overflow-hidden transition-colors ${
