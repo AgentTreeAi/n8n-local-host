@@ -71,7 +71,7 @@
         "operation": "update",
         "taskId": "={{ $('Build Event Payload').item.json.taskId }}",
         "updateFields": {
-          "labels": "={{ $('Build Event Payload').item.json.newLabels.join(',') }}"
+          "labels": "={{ $('Build Event Payload').item.json.newLabels }}"
         }
       }
     }
