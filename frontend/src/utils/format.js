@@ -259,3 +259,128 @@ export function nodeShortName(type) {
   if (!type) return '?';
   return type.replace(/^n8n-nodes-base\./i, '').replace(/^@n8n\//i, '');
 }
+
+/* ── sub-workflow dependency extraction ────────────────────────── */
+
+/** Pull the target workflow id out of an Execute-Sub-workflow node, across the
+ *  several shapes n8n has used (plain string, resource-locator object, or the
+ *  older { source, workflowId } form). Returns null when nothing resolvable. */
+export function subworkflowTargetId(node) {
+  const type = (node?.type || '').toLowerCase();
+  if (!type.includes('executeworkflow') && !type.includes('executesubworkflow')) return null;
+  const wf = node?.parameters?.workflowId;
+  if (wf == null) return null;
+  if (typeof wf === 'string') return wf || null;
+  if (typeof wf === 'object') return wf.value ?? wf.id ?? null;
+  return null;
+}
+
+/** Build a directed graph of caller → sub-workflow relationships.
+ *  Only workflows that participate in at least one edge become nodes; the rest
+ *  are reported as `isolated` so the canvas stays legible. */
+export function buildDependencyGraph(workflows = []) {
+  const byId = new Map(workflows.map((w) => [String(w.id), w]));
+  const edges = [];
+  const seen = new Set();
+
+  for (const w of workflows) {
+    for (const node of w.nodes || []) {
+      const target = subworkflowTargetId(node);
+      if (target == null) continue;
+      const targetId = String(target);
+      if (String(w.id) === targetId) continue; // ignore self-calls
+      const key = `${w.id}->${targetId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({
+        source: String(w.id),
+        target: targetId,
+        label: node.name || nodeShortName(node.type),
+        // target may be an external/unknown id not in our list
+        resolved: byId.has(targetId),
+      });
+    }
+  }
+
+  const connectedIds = new Set();
+  edges.forEach((e) => {
+    connectedIds.add(e.source);
+    connectedIds.add(e.target);
+  });
+
+  const indeg = new Map();
+  const outdeg = new Map();
+  connectedIds.forEach((id) => {
+    indeg.set(id, 0);
+    outdeg.set(id, 0);
+  });
+  edges.forEach((e) => {
+    outdeg.set(e.source, (outdeg.get(e.source) || 0) + 1);
+    indeg.set(e.target, (indeg.get(e.target) || 0) + 1);
+  });
+
+  const nodes = [...connectedIds].map((id) => {
+    const wf = byId.get(id);
+    const incoming = indeg.get(id) || 0;
+    const outgoing = outdeg.get(id) || 0;
+    let role = 'link'; // both calls and is called
+    if (incoming === 0 && outgoing > 0) role = 'orchestrator';
+    else if (incoming > 0 && outgoing === 0) role = 'subworkflow';
+    return {
+      id,
+      name: wf?.name || (byId.has(id) ? `Workflow ${id}` : `External ${id}`),
+      active: wf?.active ?? null,
+      missing: !byId.has(id),
+      incoming,
+      outgoing,
+      role,
+    };
+  });
+
+  const isolated = workflows.filter((w) => !connectedIds.has(String(w.id)));
+  return { nodes, edges, isolated };
+}
+
+/** Assign each node an integer column = longest path from a root, with a guard
+ *  against cycles. Roots (no incoming edges) sit at depth 0. */
+export function layerGraph(nodes, edges) {
+  const adj = new Map(nodes.map((n) => [n.id, []]));
+  edges.forEach((e) => {
+    if (adj.has(e.source)) adj.get(e.source).push(e.target);
+  });
+  const depth = new Map(nodes.map((n) => [n.id, 0]));
+  const roots = nodes.filter((n) => n.incoming === 0).map((n) => n.id);
+  const starts = roots.length ? roots : nodes.map((n) => n.id);
+
+  const MAX = nodes.length + 1;
+  const stack = starts.map((id) => [id, 0, new Set([id])]);
+  while (stack.length) {
+    const [id, d, path] = stack.pop();
+    if (d > (depth.get(id) || 0)) depth.set(id, Math.min(d, MAX));
+    for (const next of adj.get(id) || []) {
+      if (path.has(next)) continue; // cycle guard
+      stack.push([next, d + 1, new Set([...path, next])]);
+    }
+  }
+  return depth;
+}
+
+/* ── node-type composition across all workflows ────────────────── */
+export function countNodeTypes(workflows = [], topN = 14) {
+  const counts = new Map();
+  let total = 0;
+  for (const w of workflows) {
+    for (const node of w.nodes || []) {
+      const name = nodeShortName(node.type);
+      counts.set(name, (counts.get(name) || 0) + 1);
+      total += 1;
+    }
+  }
+  const sorted = [...counts.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+  const top = sorted.slice(0, topN);
+  const restValue = sorted.slice(topN).reduce((acc, x) => acc + x.value, 0);
+  if (restValue > 0) top.push({ name: `+${sorted.length - topN} others`, value: restValue, isRest: true });
+  return { items: top, total, distinct: sorted.length };
+}

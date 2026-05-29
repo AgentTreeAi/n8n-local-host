@@ -22,6 +22,9 @@ import {
   groupByWorkflow,
   workflowHealth,
 } from '../utils/format';
+import SuccessGauge from './SuccessGauge';
+import NodeTypeTreemap from './NodeTypeTreemap';
+import WorkflowGraph from './WorkflowGraph';
 
 const HEALTH_ICON = {
   healthy: Heart,
@@ -213,6 +216,17 @@ export default function Insights({ onSelectWorkflow }) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Overview row: gauge + node composition */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <SuccessGauge executions={executions || []} />
+        <div className="lg:col-span-2">
+          <NodeTypeTreemap workflows={workflows || []} />
+        </div>
+      </div>
+
+      {/* Dependency graph */}
+      <WorkflowGraph workflows={workflows || []} onSelectWorkflow={onSelectWorkflow} />
+
       {/* Top row: failing & slow leaderboards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="border border-border bg-card rounded-xl p-5">
