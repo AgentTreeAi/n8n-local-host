@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Activity, Play, Settings, Cpu, HardDrive, Database, ListFilter, BarChart3, TerminalSquare, Shield, RefreshCw } from 'lucide-react';
+import { Activity, Play, Settings, Cpu, HardDrive, Database, ListFilter, BarChart3, TerminalSquare, Shield, RefreshCw, Siren } from 'lucide-react';
 import ExecutionMonitor from './components/ExecutionMonitor';
 import Workflows from './components/Workflows';
 import SystemHealth from './components/SystemHealth';
+import LiveAlerts from './components/LiveAlerts';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useN8nData } from './hooks/useN8nData';
+import { useAlerts } from './hooks/useAlerts';
 import { formatMs } from './lib/formatters';
 
 // Dynamically bin executions into 6 intervals across the last 24 hours
@@ -79,11 +81,22 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 function App() {
   const [activeTab, setActiveTab] = useState('monitor');
-  const { 
-    workflows, executions, credentials, 
+  const {
+    workflows, executions, credentials,
     loading, connectionStatus, instanceHealthy, lastRefreshedAt,
-    refresh, toggleWorkflow, retryExecution 
+    refresh, toggleWorkflow, retryExecution
   } = useN8nData();
+  const { alerts, loading: alertsLoading, lastFetchedAt: alertsLastFetchedAt, refresh: refreshAlerts, error: alertsError } = useAlerts();
+  const urgentAlertCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
+
+  const handleAlertClick = (workflowName: string | null) => {
+    if (!workflowName) return;
+    setActiveTab('workflows');
+    // WorkflowDetailPanel is opened from inside the Workflows tab; we route the user there
+    // and the workflow row click handles the rest. A deeper preselect would require lifting
+    // the panel state into App, which we can do next iteration.
+    void workflowName;
+  };
 
   // Stats calculations
   const totalExecs = executions ? executions.length : 0;
@@ -164,6 +177,17 @@ function App() {
             {activeWfCount} WF_ACTIVE
           </div>
 
+          {/* Alert badge — visible whenever there are recent alerts */}
+          {alerts.length > 0 && (
+            <button
+              onClick={() => setActiveTab('monitor')}
+              className={`flex items-center gap-2 px-2 py-1 border transition-colors ${urgentAlertCount > 0 ? 'border-warning text-warning animate-pulse' : 'border-border text-text-secondary hover:text-brand hover:border-brand'}`}
+              title={urgentAlertCount > 0 ? `${urgentAlertCount} urgent alert(s)` : `${alerts.length} alert(s)`}
+            >
+              <Siren size={12} />
+              <span>{urgentAlertCount > 0 ? `${urgentAlertCount} URGENT` : `${alerts.length} ALERTS`}</span>
+            </button>
+          )}
           {connectionStatus === 'CONNECTED' && (
             <div className="flex items-center gap-2 text-brand">
               <span className="w-2 h-2 bg-brand shadow-brand animate-pulse"></span>
@@ -323,6 +347,16 @@ function App() {
                       </ResponsiveContainer>
                     </div>
                   </div>
+
+                  {/* Live Alerts — Notification Hub feed */}
+                  <LiveAlerts
+                    alerts={alerts}
+                    loading={alertsLoading}
+                    lastFetchedAt={alertsLastFetchedAt}
+                    error={alertsError}
+                    onRefresh={refreshAlerts}
+                    onAlertClick={handleAlertClick}
+                  />
 
                   {/* The Execution Grid */}
                   <div className="border border-border bg-card flex flex-col overflow-hidden">

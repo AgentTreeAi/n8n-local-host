@@ -51,9 +51,18 @@ export async function fetchExecutions(params?: FetchExecutionsParams): Promise<a
   if (params?.status) searchParams.set('status', params.status);
   if (params?.workflowId) searchParams.set('workflowId', params.workflowId);
   if (params?.limit) searchParams.set('limit', params.limit.toString());
-  
+
   const qs = searchParams.toString();
   const json = await request(`/executions${qs ? `?${qs}` : ''}`);
+  return json.data || [];
+}
+
+export async function fetchExecutionsWithData(params: { workflowId: string; limit?: number }): Promise<any[]> {
+  const sp = new URLSearchParams();
+  sp.set('workflowId', params.workflowId);
+  sp.set('includeData', 'true');
+  if (params.limit) sp.set('limit', params.limit.toString());
+  const json = await request(`/executions?${sp.toString()}`);
   return json.data || [];
 }
 
