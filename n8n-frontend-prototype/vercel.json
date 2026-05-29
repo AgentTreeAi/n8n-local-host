@@ -5,6 +5,10 @@
       "destination": "/api/proxy?endpoint=/api/v1/:path*"
     },
     {
+      "source": "/healthz",
+      "destination": "https://n8n.workflowsolution.org/healthz"
+    },
+    {
       "source": "/webhook/:path*",
       "destination": "https://n8n.workflowsolution.org/webhook/:path*"
     },

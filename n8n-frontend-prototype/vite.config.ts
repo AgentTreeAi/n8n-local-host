@@ -60,6 +60,14 @@ export default defineConfig(({ mode }) => {
           target: env.N8N_URL || 'http://localhost:5678',
           changeOrigin: true,
         },
+        '/webhook': {
+          target: env.N8N_URL || 'http://localhost:5678',
+          changeOrigin: true,
+        },
+        '/webhook-test': {
+          target: env.N8N_URL || 'http://localhost:5678',
+          changeOrigin: true,
+        },
       },
     },
   };
