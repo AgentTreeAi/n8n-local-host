@@ -10,7 +10,7 @@ const COLOR = {
 
 export default function ToastStack({ toasts, dismiss }) {
   return (
-    <div className="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 max-w-sm pointer-events-none">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)_+_80px)] md:bottom-5 right-4 md:right-5 z-[60] flex flex-col gap-2 max-w-[calc(100vw_-_2rem)] md:max-w-sm pointer-events-none">
       {toasts.map((t) => (
         <Toast key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
       ))}

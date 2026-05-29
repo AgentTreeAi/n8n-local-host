@@ -6,6 +6,7 @@ backups/
 .claude/
 .gemini/
 mcp_config.json
+.mcp.json
 *.ico
 *.png
 # Frontend PWA / Apple icons must be tracked so Vercel ships them

@@ -27,7 +27,10 @@ export default function Drawer({ open, onClose, title, subtitle, width = 720, ch
         className="relative ml-auto h-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200"
         style={{ width: `min(${width}px, 100vw)` }}
       >
-        <header className="flex items-start justify-between gap-3 p-5 border-b border-border bg-zinc-900/40">
+        <header
+          className="flex items-start justify-between gap-3 px-5 pb-4 border-b border-border bg-zinc-900/40"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)' }}
+        >
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-text-primary truncate">{title}</h2>
             {subtitle && (
@@ -36,14 +39,21 @@ export default function Drawer({ open, onClose, title, subtitle, width = 720, ch
           </div>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-white/5 transition-colors shrink-0"
+            className="text-text-secondary hover:text-text-primary w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors shrink-0 -mr-2 -mt-1"
             title="Close (Esc)"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </header>
-        <div className="flex-1 overflow-auto">{children}</div>
-        {footer && <div className="border-t border-border p-4 bg-background">{footer}</div>}
+        <div className="flex-1 overflow-auto overscroll-y-contain">{children}</div>
+        {footer && (
+          <div
+            className="border-t border-border px-4 pt-4 bg-background"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

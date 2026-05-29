@@ -4,24 +4,34 @@
  * and by /api/proxy.js (reading N8N_API_KEY env) on Vercel.
  */
 
+import { getAppPassword, notifyAuthExpired } from './auth';
+
 const BASE_URL = '/api/v1';
 
 export const N8N_PUBLIC_URL = 'https://n8n.workflowsolution.org';
 
-const baseHeaders = {
-  Accept: 'application/json',
-};
+// The app password is attached to every request; the proxy checks it before
+// it will use the real n8n API key. Read lazily so a fresh login is picked up.
+function authHeaders() {
+  return { Accept: 'application/json', 'x-app-auth': getAppPassword() };
+}
 
 const jsonHeaders = {
-  ...baseHeaders,
   'Content-Type': 'application/json',
 };
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: { ...baseHeaders, ...(options.headers || {}) },
+    headers: { ...authHeaders(), ...(options.headers || {}) },
   });
+
+  if (res.status === 401) {
+    notifyAuthExpired();
+    const err = new Error('401 Unauthorized — app password rejected');
+    err.status = 401;
+    throw err;
+  }
 
   if (!res.ok) {
     let detail = '';
@@ -112,8 +122,9 @@ export async function listTags() {
 export async function pingN8n() {
   const t0 = performance.now();
   try {
-    const res = await fetch(`${BASE_URL}/workflows?limit=1`, { headers: baseHeaders });
+    const res = await fetch(`${BASE_URL}/workflows?limit=1`, { headers: authHeaders() });
     const ms = Math.round(performance.now() - t0);
+    if (res.status === 401) notifyAuthExpired();
     return { ok: res.ok, status: res.status, latencyMs: ms };
   } catch (err) {
     return { ok: false, status: 0, latencyMs: null, error: err.message };

@@ -12,6 +12,8 @@ import {
 
 import { useExecutions, useWorkflows, useN8nHealth } from './hooks/useN8n';
 import { N8N_PUBLIC_URL } from './lib/n8nClient';
+import { isAuthenticated } from './lib/auth';
+import Login from './components/Login';
 
 import Pulse from './components/Pulse';
 import Workflows from './components/Workflows';
@@ -52,7 +54,7 @@ function HealthPill({ health }) {
   );
 }
 
-export default function App() {
+function Dashboard() {
   const [tab, setTab] = useState('monitor');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [selectedExecution, setSelectedExecution] = useState(null);
@@ -213,7 +215,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-brand selection:text-white text-sm bg-transparent">
-      <header className="border-b border-white/5 bg-background/70 backdrop-blur-xl px-6 py-3 flex items-center justify-between z-50 sticky top-0 shadow-sm shadow-black/20">
+      <header
+        className="border-b border-white/5 bg-background/70 backdrop-blur-xl px-6 py-3 flex items-center justify-between z-50 sticky top-0 shadow-sm shadow-black/20"
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
+      >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 bg-brand rounded-md text-white flex items-center justify-center font-bold text-lg leading-none shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-105 cursor-default">
             n
@@ -300,13 +305,13 @@ export default function App() {
           })}
         </aside>
 
-        <div className="flex-1 overflow-auto relative pb-24 md:pb-0">
+        <div className="flex-1 overflow-auto relative overscroll-y-contain pb-[calc(env(safe-area-inset-bottom)_+_80px)] md:pb-0">
           <div className="mx-auto w-full max-w-[1500px]">{tabContent}</div>
         </div>
       </main>
 
       {/* iOS Style Bottom Sticky Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 border-t border-white/5 backdrop-blur-xl flex justify-around items-center pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)] px-3 shadow-[0_-4px_24px_rgba(0,0,0,0.6)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 border-t border-white/5 backdrop-blur-xl flex justify-around items-center pt-2 pb-[calc(env(safe-area-inset-bottom)_+_8px)] px-[max(12px,env(safe-area-inset-left))] shadow-[0_-4px_24px_rgba(0,0,0,0.6)]">
         {TABS.map((t) => {
           const active = tab === t.key;
           return (
@@ -362,4 +367,17 @@ export default function App() {
       <ToastStack toasts={toasts} dismiss={dismissToast} />
     </div>
   );
+}
+
+export default function App() {
+  const [authed, setAuthed] = useState(isAuthenticated());
+
+  useEffect(() => {
+    const onExpired = () => setAuthed(false);
+    window.addEventListener('app-auth-expired', onExpired);
+    return () => window.removeEventListener('app-auth-expired', onExpired);
+  }, []);
+
+  if (!authed) return <Login onSuccess={() => setAuthed(true)} />;
+  return <Dashboard />;
 }
