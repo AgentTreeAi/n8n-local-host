@@ -17,7 +17,10 @@
       "name": "Daily 10 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -33,7 +36,10 @@
       "name": "Get All Tasks",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [220, 0],
+      "position": [
+        220,
+        0
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -50,7 +56,10 @@
       "name": "Process Deadlines",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 0]
+      "position": [
+        440,
+        0
+      ]
     },
     {
       "parameters": {
@@ -79,7 +88,10 @@
       "name": "Any Deadlines?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [660, 0]
+      "position": [
+        660,
+        0
+      ]
     },
     {
       "parameters": {
@@ -93,7 +105,10 @@
       "name": "Send Deadline Alert",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [880, -100],
+      "position": [
+        880,
+        -100
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -107,7 +122,10 @@
       "name": "No Deadlines",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [880, 100]
+      "position": [
+        880,
+        100
+      ]
     }
   ],
   "connections": {
@@ -164,7 +182,8 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   },
   "pinData": {}
 }

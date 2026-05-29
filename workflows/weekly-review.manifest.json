@@ -1,0 +1,11 @@
+{
+  "workflow_id": "U1i3kRbrejmxB5yE",
+  "workflow_name": "Todoist Weekly Review",
+  "client_pitch": "Weekly Review Digest — Friday summary of what shipped, what slipped, and what is coming next week.",
+  "target_vertical": "all",
+  "tier": "pro",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

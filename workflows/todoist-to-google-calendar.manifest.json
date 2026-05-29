@@ -1,0 +1,11 @@
+{
+  "workflow_id": "e7jCSyAujOKfFRjd",
+  "workflow_name": "Todoist → Google Calendar Sync",
+  "client_pitch": "Calendar Sync — high-priority commitments appear on the team Google Calendar automatically, no copy-paste required.",
+  "target_vertical": "all",
+  "tier": "starter",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

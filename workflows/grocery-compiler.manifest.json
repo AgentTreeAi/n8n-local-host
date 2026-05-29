@@ -1,0 +1,11 @@
+{
+  "workflow_id": "ldEfAb6LT7eD60uS",
+  "workflow_name": "Todoist Grocery Run Compiler",
+  "client_pitch": "List Aggregator — collapses scattered tagged items into one ordered checklist on a schedule.",
+  "target_vertical": "internal, demo",
+  "tier": "internal",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

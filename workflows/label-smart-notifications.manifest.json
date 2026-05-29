@@ -1,0 +1,11 @@
+{
+  "workflow_id": "q5gn6FypAylSnD9u",
+  "workflow_name": "Todoist Label-Smart Notifications",
+  "client_pitch": "Smart Notifications — routes alerts by priority and label so the right person hears about the right thing at the right time.",
+  "target_vertical": "all",
+  "tier": "pro",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

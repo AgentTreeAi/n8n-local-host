@@ -1,0 +1,11 @@
+{
+  "workflow_id": "3I8ttHD2ZC3EUwUL",
+  "workflow_name": "Todoist Stale Task Detector",
+  "client_pitch": "Stuck-Work Detector — surfaces work that has been untouched for 7+ days so the weekly review never misses a buried item.",
+  "target_vertical": "all",
+  "tier": "starter",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

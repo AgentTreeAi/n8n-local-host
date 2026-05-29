@@ -16,7 +16,10 @@
       "name": "Sunday 6 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -31,7 +34,10 @@
       "name": "Get Overdue",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [260, 200],
+      "position": [
+        260,
+        200
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -52,7 +58,10 @@
       "name": "Get Next Week",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [260, 400],
+      "position": [
+        260,
+        400
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -68,7 +77,10 @@
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [520, 300]
+      "position": [
+        520,
+        300
+      ]
     },
     {
       "parameters": {
@@ -80,7 +92,10 @@
       "name": "Format Review",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [780, 300]
+      "position": [
+        780,
+        300
+      ]
     },
     {
       "parameters": {
@@ -95,7 +110,10 @@
       "name": "Send Review Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [1040, 300],
+      "position": [
+        1040,
+        300
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -108,41 +126,66 @@
     "Sunday 6 PM": {
       "main": [
         [
-          { "node": "Get Overdue", "type": "main", "index": 0 },
-          { "node": "Get Next Week", "type": "main", "index": 0 }
+          {
+            "node": "Get Overdue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Next Week",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Get Overdue": {
       "main": [
         [
-          { "node": "Merge", "type": "main", "index": 0 }
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Get Next Week": {
       "main": [
         [
-          { "node": "Merge", "type": "main", "index": 1 }
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
         ]
       ]
     },
     "Merge": {
       "main": [
         [
-          { "node": "Format Review", "type": "main", "index": 0 }
+          {
+            "node": "Format Review",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Format Review": {
       "main": [
         [
-          { "node": "Send Review Email", "type": "main", "index": 0 }
+          {
+            "node": "Send Review Email",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   }
 }

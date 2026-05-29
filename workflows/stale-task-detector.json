@@ -8,7 +8,9 @@
             {
               "field": "weeks",
               "weeksInterval": 1,
-              "triggerAtDay": [1],
+              "triggerAtDay": [
+                1
+              ],
               "triggerAtHour": 8,
               "triggerAtMinute": 0
             }
@@ -19,7 +21,10 @@
       "name": "Monday 8 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -34,7 +39,10 @@
       "name": "Get Undated Tasks",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [260, 300],
+      "position": [
+        260,
+        300
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -52,7 +60,10 @@
       "name": "Filter & Format",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [520, 300]
+      "position": [
+        520,
+        300
+      ]
     },
     {
       "parameters": {
@@ -84,7 +95,10 @@
       "name": "Any Stale?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [780, 300]
+      "position": [
+        780,
+        300
+      ]
     },
     {
       "parameters": {
@@ -99,7 +113,10 @@
       "name": "Send Stale Report",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [1040, 200],
+      "position": [
+        1040,
+        200
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -113,43 +130,67 @@
       "name": "No Stale Tasks",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1040, 400]
+      "position": [
+        1040,
+        400
+      ]
     }
   ],
   "connections": {
     "Monday 8 AM": {
       "main": [
         [
-          { "node": "Get Undated Tasks", "type": "main", "index": 0 }
+          {
+            "node": "Get Undated Tasks",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Get Undated Tasks": {
       "main": [
         [
-          { "node": "Filter & Format", "type": "main", "index": 0 }
+          {
+            "node": "Filter & Format",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Filter & Format": {
       "main": [
         [
-          { "node": "Any Stale?", "type": "main", "index": 0 }
+          {
+            "node": "Any Stale?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Any Stale?": {
       "main": [
         [
-          { "node": "Send Stale Report", "type": "main", "index": 0 }
+          {
+            "node": "Send Stale Report",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "No Stale Tasks", "type": "main", "index": 0 }
+          {
+            "node": "No Stale Tasks",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   }
 }

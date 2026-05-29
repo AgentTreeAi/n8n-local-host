@@ -1,0 +1,11 @@
+{
+  "workflow_id": "1R1wBEaCwz0CYTpi",
+  "workflow_name": "Todoist Deadline Early Warning",
+  "client_pitch": "SLA Deadline Watcher — pings the team 48 hours before any commitment is due, so it never becomes a fire.",
+  "target_vertical": "all",
+  "tier": "starter",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

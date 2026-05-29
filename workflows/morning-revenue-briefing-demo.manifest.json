@@ -1,0 +1,11 @@
+{
+  "workflow_id": "G6Hp93W7MHvvtozy",
+  "workflow_name": "Morning Revenue Briefing — Demo",
+  "client_pitch": "Revenue Pulse — daily pipeline + revenue snapshot delivered before the first meeting, so the owner walks in knowing the numbers.",
+  "target_vertical": "agencies, service-business",
+  "tier": "pro",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

@@ -17,7 +17,10 @@
       "name": "Every Day 9 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -32,7 +35,10 @@
       "name": "Get Overdue Tasks",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [220, 0],
+      "position": [
+        220,
+        0
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -49,7 +55,10 @@
       "name": "Calculate Overdue Tier",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 0]
+      "position": [
+        440,
+        0
+      ]
     },
     {
       "parameters": {
@@ -130,7 +139,10 @@
       "name": "Route by Tier",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
-      "position": [660, 0]
+      "position": [
+        660,
+        0
+      ]
     },
     {
       "parameters": {
@@ -146,7 +158,10 @@
       "name": "Add URGENT Label",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, -200],
+      "position": [
+        900,
+        -200
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -167,7 +182,10 @@
       "name": "Email Week Overdue",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [900, 0],
+      "position": [
+        900,
+        0
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -188,7 +206,10 @@
       "name": "Email Stale Alert",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [900, 200],
+      "position": [
+        900,
+        200
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -258,6 +279,7 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   }
 }

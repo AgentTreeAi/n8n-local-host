@@ -12,7 +12,10 @@
       "name": "Sticky: Title",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, -260]
+      "position": [
+        0,
+        -260
+      ]
     },
     {
       "parameters": {},
@@ -20,7 +23,10 @@
       "name": "Run Manually (Demo)",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 100]
+      "position": [
+        0,
+        100
+      ]
     },
     {
       "parameters": {
@@ -37,7 +43,10 @@
       "name": "7:30 AM Weekdays",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 280]
+      "position": [
+        0,
+        280
+      ]
     },
     {
       "parameters": {
@@ -50,7 +59,10 @@
       "name": "Sticky: Triggers",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-20, 420]
+      "position": [
+        -20,
+        420
+      ]
     },
     {
       "parameters": {
@@ -62,7 +74,10 @@
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [240, 180]
+      "position": [
+        240,
+        180
+      ]
     },
     {
       "parameters": {
@@ -75,7 +90,10 @@
       "name": "Sticky: Config",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [220, 420]
+      "position": [
+        220,
+        420
+      ]
     },
     {
       "parameters": {
@@ -106,7 +124,10 @@
       "name": "Demo Mode?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [480, 180]
+      "position": [
+        480,
+        180
+      ]
     },
     {
       "parameters": {
@@ -118,7 +139,10 @@
       "name": "Seed Demo Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 0]
+      "position": [
+        720,
+        0
+      ]
     },
     {
       "parameters": {
@@ -131,7 +155,10 @@
       "name": "Sticky: Demo Path",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [700, -180]
+      "position": [
+        700,
+        -180
+      ]
     },
     {
       "parameters": {
@@ -151,7 +178,10 @@
       "name": "Live Mode Hub",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [720, 320]
+      "position": [
+        720,
+        320
+      ]
     },
     {
       "parameters": {
@@ -167,7 +197,10 @@
       "name": "Todoist: Today + Overdue",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [960, 200],
+      "position": [
+        960,
+        200
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -197,7 +230,10 @@
       "name": "Calendar: Today's Events",
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.3,
-      "position": [960, 380],
+      "position": [
+        960,
+        380
+      ],
       "executeOnce": true,
       "onError": "continueRegularOutput"
     },
@@ -217,7 +253,10 @@
       "name": "Gmail: Priority Unread",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [960, 560],
+      "position": [
+        960,
+        560
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -238,7 +277,10 @@
       "name": "Sticky: Live Path",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [700, 760]
+      "position": [
+        700,
+        760
+      ]
     },
     {
       "parameters": {
@@ -250,7 +292,10 @@
       "name": "Normalize Live Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 380]
+      "position": [
+        1200,
+        380
+      ]
     },
     {
       "parameters": {
@@ -262,7 +307,10 @@
       "name": "Merge Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1440, 180]
+      "position": [
+        1440,
+        180
+      ]
     },
     {
       "parameters": {
@@ -273,8 +321,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "anthropic-version", "value": "2023-06-01" },
-            { "name": "content-type", "value": "application/json" }
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -289,7 +343,10 @@
       "name": "Claude → Briefing",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1680, 180],
+      "position": [
+        1680,
+        180
+      ],
       "onError": "continueRegularOutput",
       "retryOnFail": true
     },
@@ -304,7 +361,10 @@
       "name": "Sticky: AI",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [1660, -180]
+      "position": [
+        1660,
+        -180
+      ]
     },
     {
       "parameters": {
@@ -316,7 +376,10 @@
       "name": "Format Email + Slack",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1920, 180]
+      "position": [
+        1920,
+        180
+      ]
     },
     {
       "parameters": {
@@ -332,7 +395,10 @@
       "name": "Send Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [2160, 80],
+      "position": [
+        2160,
+        80
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -360,7 +426,10 @@
       "name": "Send Slack",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
-      "position": [2160, 280],
+      "position": [
+        2160,
+        280
+      ],
       "onError": "continueRegularOutput",
       "retryOnFail": true
     },
@@ -375,7 +444,10 @@
       "name": "Sticky: Delivery",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [2140, -180]
+      "position": [
+        2140,
+        -180
+      ]
     },
     {
       "parameters": {
@@ -388,61 +460,181 @@
       "name": "Sticky: Pre-Shoot Checklist",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, 980]
+      "position": [
+        0,
+        980
+      ]
     }
   ],
   "connections": {
     "Run Manually (Demo)": {
-      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "7:30 AM Weekdays": {
-      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Config": {
-      "main": [[{ "node": "Demo Mode?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Demo Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Demo Mode?": {
       "main": [
-        [{ "node": "Seed Demo Data", "type": "main", "index": 0 }],
-        [{ "node": "Live Mode Hub", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Seed Demo Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Live Mode Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Seed Demo Data": {
-      "main": [[{ "node": "Merge Paths", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Merge Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Live Mode Hub": {
-      "main": [[
-        { "node": "Todoist: Today + Overdue", "type": "main", "index": 0 },
-        { "node": "Calendar: Today's Events", "type": "main", "index": 0 },
-        { "node": "Gmail: Priority Unread", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "Todoist: Today + Overdue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calendar: Today's Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Priority Unread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Todoist: Today + Overdue": {
-      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Live Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Calendar: Today's Events": {
-      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Live Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Gmail: Priority Unread": {
-      "main": [[{ "node": "Normalize Live Data", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Live Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize Live Data": {
-      "main": [[{ "node": "Merge Paths", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Merge Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Merge Paths": {
-      "main": [[{ "node": "Claude → Briefing", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Claude → Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Claude → Briefing": {
-      "main": [[{ "node": "Format Email + Slack", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Format Email + Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Format Email + Slack": {
-      "main": [[
-        { "node": "Send Email", "type": "main", "index": 0 },
-        { "node": "Send Slack", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   }
 }

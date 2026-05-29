@@ -1,0 +1,11 @@
+{
+  "workflow_id": "XXacpWi4IeE0woNa",
+  "workflow_name": "Todoist Morning Briefing",
+  "client_pitch": "Daily Owner Briefing — every morning, a one-glance summary of what is due, what is overdue, and the top priorities to focus on.",
+  "target_vertical": "all",
+  "tier": "starter",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

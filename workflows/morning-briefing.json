@@ -17,7 +17,10 @@
       "name": "Daily 7 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -33,7 +36,10 @@
       "name": "Get Tasks",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [220, 0],
+      "position": [
+        220,
+        0
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -50,7 +56,10 @@
       "name": "Format Briefing",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 0]
+      "position": [
+        440,
+        0
+      ]
     },
     {
       "parameters": {
@@ -78,7 +87,10 @@
       "name": "Has Tasks?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [660, 0],
+      "position": [
+        660,
+        0
+      ],
       "onError": "continueErrorOutput"
     },
     {
@@ -95,7 +107,10 @@
       "name": "Send Briefing",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [880, -60],
+      "position": [
+        880,
+        -60
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -109,33 +124,67 @@
       "name": "No Tasks",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [880, 120]
+      "position": [
+        880,
+        120
+      ]
     }
   ],
   "connections": {
     "Daily 7 AM": {
       "main": [
-        [{ "node": "Get Tasks", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Get Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Get Tasks": {
       "main": [
-        [{ "node": "Format Briefing", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Format Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Format Briefing": {
       "main": [
-        [{ "node": "Has Tasks?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Has Tasks?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Has Tasks?": {
       "main": [
-        [{ "node": "Send Briefing", "type": "main", "index": 0 }],
-        [{ "node": "No Tasks", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Send Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   }
 }

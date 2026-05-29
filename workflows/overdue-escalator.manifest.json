@@ -1,0 +1,11 @@
+{
+  "workflow_id": "d2vg7POcRLC1wnmu",
+  "workflow_name": "Todoist Overdue Escalator",
+  "client_pitch": "Overdue Escalator — auto-escalates anything that slipped past its due date, so nothing gets quietly forgotten.",
+  "target_vertical": "all",
+  "tier": "starter",
+  "sub_workflows": {
+    "error_handler": "RdB2EbQZ71hjMUuE"
+  },
+  "last_polished": "2026-05-29"
+}

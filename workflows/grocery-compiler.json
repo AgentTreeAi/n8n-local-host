@@ -12,7 +12,10 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "grocery-run-webhook-001"
     },
     {
@@ -28,7 +31,10 @@
       "name": "Get Grocery Tasks",
       "type": "n8n-nodes-base.todoist",
       "typeVersion": 2.2,
-      "position": [470, 300],
+      "position": [
+        470,
+        300
+      ],
       "credentials": {
         "todoistApi": {
           "id": "9phgu8r8c5dNtDZC",
@@ -45,7 +51,10 @@
       "name": "Group by Store",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 300]
+      "position": [
+        700,
+        300
+      ]
     },
     {
       "parameters": {
@@ -60,7 +69,10 @@
       "name": "Send Shopping List",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [930, 300],
+      "position": [
+        930,
+        300
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "tAz2Z1W3R4tplbjc",
@@ -105,7 +117,8 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "RdB2EbQZ71hjMUuE"
   },
   "staticData": null
 }
