@@ -11,23 +11,23 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
-        background: '#09090b', // zinc-950
-        card: '#18181b', // zinc-900
-        border: '#27272a', // zinc-800
+        background: 'rgb(var(--color-background) / <alpha-value>)',
+        card: 'rgb(var(--color-card) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
         brand: {
-          DEFAULT: '#6366f1', // Indigo-500
-          hover: '#4f46e5', // Indigo-600
+          DEFAULT: 'rgb(var(--color-brand) / <alpha-value>)',
+          hover: 'rgb(var(--color-brand-hover) / <alpha-value>)',
         },
-        success: '#10b981', // Emerald-500
-        warning: '#f43f5e', // Rose-500
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
         text: {
-          primary: '#f4f4f5', // zinc-100
-          secondary: '#a1a1aa', // zinc-400
-          muted: '#71717a', // zinc-500
+          primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+          muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
         }
       },
       boxShadow: {
-        'brand': '0 0 15px rgba(99, 102, 241, 0.15)',
+        'brand': 'var(--shadow-brand)',
       }
     },
   },
