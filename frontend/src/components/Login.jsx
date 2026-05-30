@@ -39,7 +39,7 @@ export default function Login({ onSuccess }) {
     <div className="min-h-screen flex items-center justify-center px-4 bg-background text-text-primary font-sans">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm bg-card border border-border rounded-2xl p-7 shadow-xl"
+        className="w-full max-w-sm bg-card border border-border rounded-2xl p-7 shadow-xl relative z-40"
       >
         <div className="flex items-center gap-2.5 mb-1">
           <div className="w-9 h-9 bg-brand rounded-lg text-white flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)]">
@@ -55,7 +55,7 @@ export default function Login({ onSuccess }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="App password"
-          className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand transition-colors"
+          className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand transition-colors relative z-50 cursor-text pointer-events-auto"
           autoComplete="current-password"
         />
 
